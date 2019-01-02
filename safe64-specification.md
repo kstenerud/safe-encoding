@@ -78,12 +78,15 @@ In the last (possibly partial) group, the number of characters indicates how man
 
 | Characters | Remaining Bytes |
 | ---------- | --------------- |
-| 1          | invalid         |
+| 1          | 0               |
 | 2          | 1               |
 | 3          | 2               |
 | 4          | 3               |
 
-Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
+Notes:
+
+ * Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
+ * Excess character length of 1 should in theory never happen, but must nonetheless be handled by the decoder.
 
 ------------------------------------------------------------------------------
 
