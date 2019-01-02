@@ -166,7 +166,7 @@ Truncation Detection
 
 Should truncation occur anywhere in the encoded sequence, one of two things will happen:
 
- 1. The data length won't match the length field.
+ 1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
 
 
