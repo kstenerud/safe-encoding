@@ -140,7 +140,7 @@ The length encoding uses the lower 4 bits for data, and the high bit as a contin
  * c = continuation bit
  * x = data
 
-When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 4 bits, then the next lower 4 bits, and so on).
+When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 4 bit chunks are interpreted in big endian order (the first character represents the highest 4 bits, then the next lower 4 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
