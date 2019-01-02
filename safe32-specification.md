@@ -116,12 +116,14 @@ In the last (possibly partial) group, the number of characters indicates how man
 
 Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
 
+------------------------------------------------------------------------------
+
 
 
 Safe32l
 =======
 
-While safe32 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such a case, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe32 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
 
 
 Encoding
