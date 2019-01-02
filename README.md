@@ -8,6 +8,7 @@ Safe64 and Safe32 Encodings
 Features:
 ---------
 
+ * No padding characters
  * No escaping necessary
  * Safe for use in URLs
  * Safe for use as filenames

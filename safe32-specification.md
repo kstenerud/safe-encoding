@@ -7,6 +7,7 @@ Safe32 provides a binary data encoding scheme that is safe to be input by humans
 
  * Easily confusable characters & digits are interchangeable.
  * Uppercase and lowercase characters are interchangeable.
+ * No padding characters
  * No escaping necessary
  * Safe for use in URLs
  * Safe for use as filenames

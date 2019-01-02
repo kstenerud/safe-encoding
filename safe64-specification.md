@@ -5,6 +5,7 @@ Safe64 provides a binary data encoding scheme that is safe to be passed through 
 
 ### Features:
 
+ * No padding characters
  * No escaping necessary
  * Safe for use in URLs
  * Safe for use as filenames
