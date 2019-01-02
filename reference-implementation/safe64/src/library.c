@@ -111,11 +111,11 @@ int64_t safe64_get_decoded_length(const int64_t encoded_length)
     return groups * DECODED_BYTES_PER_GROUP + remainder;
 }
 
-int64_t safe64_decode_feed(const char** src_buffer_ptr,
-                           const char* src_buffer_end,
-                           unsigned char** dst_buffer_ptr,
-                           unsigned char* dst_buffer_end,
-                           bool is_end_of_data)
+safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
+                                      const char* src_buffer_end,
+                                      unsigned char** dst_buffer_ptr,
+                                      unsigned char* dst_buffer_end,
+                                      bool is_end_of_data)
 {
     int64_t accumulator = 0;
     int src_group_char_count = 0;
@@ -142,7 +142,7 @@ int64_t safe64_decode_feed(const char** src_buffer_ptr,
             KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
             *src_buffer_ptr = src; \
             *dst_buffer_ptr = dst; \
-            return SAFE64_ERROR_NOT_ENOUGH_ROOM; \
+            return SAFE64_STATUS_DESTINATION_BUFFER_FULL; \
         } \
         for(int i = bytes_to_write-1; i >= 0; i--) \
         { \
@@ -197,7 +197,7 @@ int64_t safe64_decode_feed(const char** src_buffer_ptr,
     *src_buffer_ptr = src;
     *dst_buffer_ptr = dst;
 
-    return 0;
+    return SAFE64_STATUS_OK;
 #undef WRITE_BYTES
 }
 
@@ -223,11 +223,11 @@ int64_t safe64_get_encoded_length(const int64_t decoded_length)
     return groups * 4 + remainder;
 }
 
-int64_t safe64_encode_feed(const unsigned char** src_buffer_ptr,
-                           const unsigned char* src_buffer_end,
-                           char** dst_buffer_ptr,
-                           char* dst_buffer_end,
-                           bool is_end_of_data)
+safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
+                                      const unsigned char* src_buffer_end,
+                                      char** dst_buffer_ptr,
+                                      char* dst_buffer_end,
+                                      bool is_end_of_data)
 {
     int64_t accumulator = 0;
     int src_group_char_count = 0;
@@ -255,7 +255,7 @@ int64_t safe64_encode_feed(const unsigned char** src_buffer_ptr,
             KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
             *src_buffer_ptr = src; \
             *dst_buffer_ptr = dst; \
-            return SAFE64_ERROR_NOT_ENOUGH_ROOM; \
+            return SAFE64_STATUS_DESTINATION_BUFFER_FULL; \
         } \
         for(int i = bytes_to_write-1; i >= 0; i--) \
         { \
@@ -298,7 +298,7 @@ int64_t safe64_encode_feed(const unsigned char** src_buffer_ptr,
     *src_buffer_ptr = src;
     *dst_buffer_ptr = dst;
 
-    return 0;
+    return SAFE64_STATUS_OK;
 #undef WRITE_BYTES
 }
 
@@ -316,4 +316,3 @@ int64_t safe64_encode(const unsigned char* src_buffer,
     }
     return dst - dst_buffer;
 }
-
