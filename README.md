@@ -9,7 +9,7 @@ Features:
 ---------
 
  * Safe for use in URLs
- * Safe for use as filenames
+ * Safe for use in filenames
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
  * Support for length fields
@@ -25,6 +25,7 @@ Features:
 Advantages over base64 and base32:
 ----------------------------------
 
+ * Smaller alphabet
  * No padding characters
  * No escaping necessary
  * Liberal whitespace rules
