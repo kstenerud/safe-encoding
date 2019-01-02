@@ -70,8 +70,6 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 000d       | Carriage Return |
 | 0020       | Space           |
 
-Whitespace is optional, and can be forbidden by explicit agreement between the sending and receiving party.
-
 
 Termination
 -----------

@@ -94,8 +94,6 @@ Note: Dash is included as "whitespace" to allow human input sequences such as:
 
     ah4f-22um-8221-4az1
 
-Whitespace is optional, and can be forbidden by explicit agreement between the sending and receiving party.
-
 
 Termination
 -----------
