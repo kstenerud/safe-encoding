@@ -17,7 +17,7 @@ Features:
  * Sortable in generic text sorting algorithms (such as file listings)
  * Alternate form with prefixed length
 
-### Safe32 Features:
+### Safe32 Additional Features:
 
  * Easily confusable characters & digits are interchangeable.
  * Uppercase and lowercase characters are interchangeable.
