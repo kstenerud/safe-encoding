@@ -120,7 +120,7 @@ Excess bits in partial groups must be set to 0, and must be discarded by the dec
 
 
 
-Safe32l
+Safe32L
 =======
 
 While safe32 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
@@ -129,7 +129,7 @@ While safe32 is sufficient for most systems, there are transmission mediums wher
 Encoding
 --------
 
-Safe32l works essentially the same as safe32, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
+Safe32L works essentially the same as safe32, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
 
 The length encoding uses the lower 4 bits for data, and the high bit as a continuation bit:
 

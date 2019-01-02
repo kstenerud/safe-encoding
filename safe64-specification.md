@@ -89,7 +89,7 @@ Excess bits in partial groups must be set to 0, and must be discarded by the dec
 
 
 
-Safe64l
+Safe64L
 =======
 
 While safe64 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
@@ -98,7 +98,7 @@ While safe64 is sufficient for most systems, there are transmission mediums wher
 Encoding
 --------
 
-Safe64l works essentially the same as safe64, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
+Safe64L works essentially the same as safe64, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
 
 The length encoding uses the lower 5 bits for data, and the high bit as a continuation bit:
 
@@ -147,7 +147,7 @@ Advantages over base64 padding
 
  * No extra alphabet character is necessary. The length encodes using the exact same alphabet as the data encoding.
  * Truncation is always detected. With base64 padding, truncation on a 4-character boundary will not be detected.
- * Lower data usage for smaller data. base64's padding scheme uses an average of 1.5 characters no matter the length of the data. Safe64l uses only 1 byte for lengths 31 and under. By the time its size performance suffers in comparison to base64 (at length 32), the character length difference is already less than 2% of the total payload size, and shrinks from there.
+ * Lower data usage for smaller data. base64's padding scheme uses an average of 1.5 characters no matter the length of the data. Safe64L uses only 1 byte for lengths 31 and under. By the time its size performance suffers in comparison to base64 (at length 32), the character length difference is already less than 2% of the total payload size, and shrinks from there.
 
 
 
