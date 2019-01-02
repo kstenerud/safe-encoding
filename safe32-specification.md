@@ -3,6 +3,9 @@ Safe32 Encoding
 
 Safe32 provides a binary data encoding scheme that is safe to be input by humans, and safe to be passed through processing systems that expect human readable text.
 
+It is especially useful for things requiring human input such as activation codes.
+
+
 ### Features:
 
  * Easily confusable characters & digits are interchangeable.
