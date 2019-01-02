@@ -122,6 +122,12 @@ When the continuation bit is set to 1, the length field is continued in the next
 | ...        |  ... |                      ... |
 
 
+Whitespace
+----------
+
+The length field may also be broken up using the same whitespace rules as for safe64.
+
+
 Truncation Detection
 --------------------
 
