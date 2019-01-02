@@ -35,7 +35,7 @@ TEST(SECTION, NAME) \
 		                                             encode_buffer.data(), \
 		                                             encode_buffer.size()); \
 	std::string actual_encoded(encode_buffer.begin(), encode_buffer.end()); \
-	ASSERT_EQ(actual_encode_used_bytes, expected_encode_used_bytes); \
+	ASSERT_EQ(expected_encode_used_bytes, actual_encode_used_bytes); \
 	ASSERT_EQ(expected_encoded, actual_encoded); \
 }
 
@@ -55,7 +55,7 @@ TEST(SECTION, NAME) \
 		                                             expected_encoded.size(), \
 		                                             actual_decoded.data(), \
 		                                             actual_decoded.size()); \
-	ASSERT_EQ(actual_decode_used_bytes, expected_decode_used_bytes); \
+	ASSERT_EQ(expected_decode_used_bytes, actual_decode_used_bytes); \
 	ASSERT_EQ(expected_decoded, actual_decoded); \
 }
 
@@ -89,20 +89,42 @@ TEST(SECTION, NAME) \
 		                                             expected_encoded.size(), \
 		                                             actual_decoded.data(), \
 		                                             actual_decoded.size()); \
-	ASSERT_EQ(actual_decode_used_bytes, expected_decode_used_bytes); \
+	ASSERT_EQ(expected_decode_used_bytes, actual_decode_used_bytes); \
 	ASSERT_EQ(expected_decoded, actual_decoded); \
+}
+
+#define TEST_DECODE_ERROR(SECTION, NAME, ERROR_CODE, DECODE_BUFFER_SIZE, ENCODED) \
+TEST(SECTION, NAME) \
+{ \
+	std::string encoded = ENCODED; \
+	std::vector<unsigned char> decode_buffer(DECODE_BUFFER_SIZE); \
+	int64_t expected_status_code = ERROR_CODE; \
+	int64_t actual_status_code = safe64_decode(encoded.data(), \
+		                                       encoded.size(), \
+		                                       decode_buffer.data(), \
+		                                       decode_buffer.size()); \
+	ASSERT_EQ(expected_status_code, actual_status_code); \
 }
 
 
 
-TEST_ENCODE_DECODE(Safe64Encode, _1_byte,  "wF",      {0xf1})
-TEST_ENCODE_DECODE(Safe64Encode, _2_bytes, "AdZ",     {0x2e, 0x99})
-TEST_ENCODE_DECODE(Safe64Encode, _3_bytes, "wYGL",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE(Safe64Encode, _4_bytes, "HcXwoF",  {0x4a, 0x88, 0xbc, 0xd1})
-TEST_ENCODE_DECODE(Safe64Encode, _5_bytes, "zr6SDd7", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_ENCODE_DECODE(Encode, _1_byte,  "wF",      {0xf1})
+TEST_ENCODE_DECODE(Encode, _2_bytes, "AdZ",     {0x2e, 0x99})
+TEST_ENCODE_DECODE(Encode, _3_bytes, "wYGL",    {0xf2, 0x34, 0x56})
+TEST_ENCODE_DECODE(Encode, _4_bytes, "HcXwoF",  {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE(Encode, _5_bytes, "zr6SDd7", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE(Safe64Decode, _1_byte,  "wF",      {0xf1})
-TEST_DECODE(Safe64Decode, _2_bytes, "AdZ",     {0x2e, 0x99})
-TEST_DECODE(Safe64Decode, _3_bytes, "wYGL",    {0xf2, 0x34, 0x56})
-TEST_DECODE(Safe64Decode, _4_bytes, "HcXwoF",  {0x4a, 0x88, 0xbc, 0xd1})
-TEST_DECODE(Safe64Decode, _5_bytes, "zr6SDd7", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE_ERROR(DecodeError, src_data_missing, SAFE64_ERROR_SOURCE_DATA_MISSING, 100, "w")
+
+TEST_DECODE_ERROR(DecodeError, dst_buffer_too_short_4, SAFE64_ERROR_NOT_ENOUGH_ROOM, 4, "zr6SDd7")
+TEST_DECODE_ERROR(DecodeError, dst_buffer_too_short_3, SAFE64_ERROR_NOT_ENOUGH_ROOM, 3, "zr6SDd7")
+TEST_DECODE_ERROR(DecodeError, dst_buffer_too_short_2, SAFE64_ERROR_NOT_ENOUGH_ROOM, 2, "zr6SDd7")
+TEST_DECODE_ERROR(DecodeError, dst_buffer_too_short_1, SAFE64_ERROR_NOT_ENOUGH_ROOM, 1, "zr6SDd7")
+
+TEST_DECODE_ERROR(Encode, invalid_0, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, ".r6SDd7")
+TEST_DECODE_ERROR(Encode, invalid_1, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, "z.6SDd7")
+TEST_DECODE_ERROR(Encode, invalid_2, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, "zr.SDd7")
+TEST_DECODE_ERROR(Encode, invalid_3, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, "zr6.Dd7")
+TEST_DECODE_ERROR(Encode, invalid_4, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, "zr6S.d7")
+TEST_DECODE_ERROR(Encode, invalid_5, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, "zr6SD.7")
+TEST_DECODE_ERROR(Encode, invalid_6, SAFE64_ERROR_INVALID_SOURCE_DATA, 100, "zr6SDd.")

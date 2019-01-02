@@ -3,7 +3,7 @@
 
 #include <limits.h>
 
-#define KSLogger_LocalLevel DEBUG
+// #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
 #define DECODED_BYTES_PER_GROUP 3
@@ -98,7 +98,7 @@ int64_t safe64_decode_feed(const char* src_buffer,
                            int64_t dst_length,
                            bool is_end_of_data)
 {
-    const int32_t max_accumulator_value = (1 << (ENCODED_BITS_PER_BYTE * ENCODED_BYTES_PER_GROUP)) - 1;
+    const uint32_t max_accumulator_value = (1 << (DECODED_BITS_PER_BYTE * DECODED_BYTES_PER_GROUP)) - 1;
     const int32_t src_bytes_per_group = ENCODED_BYTES_PER_GROUP;
     const int32_t dst_bytes_per_group = DECODED_BYTES_PER_GROUP;
     const int32_t src_bits_per_byte = ENCODED_BITS_PER_BYTE;
@@ -116,7 +116,7 @@ int64_t safe64_decode_feed(const char* src_buffer,
     KSLOG_DEBUG("Decode %d chars into %d bytes, ending %d", src_length, dst_length, is_end_of_data);
     for(int64_t group = 0; group < group_count; group++)
     {
-        int32_t accumulator = 0;
+        uint32_t accumulator = 0;
         for(int i = 0; i < src_bytes_per_group; i++)
         {
             accumulator = (accumulator << src_bits_per_byte) | alphabet[(int)(*src++)];
@@ -124,6 +124,7 @@ int64_t safe64_decode_feed(const char* src_buffer,
         }
         if(accumulator > max_accumulator_value)
         {
+            KSLOG_DEBUG("Error: accumulator (%x) > max accum %x", accumulator, max_accumulator_value);
             return SAFE64_ERROR_INVALID_SOURCE_DATA;
         }
         for(int i = dst_bytes_per_group-1; i >= 0; i--)
@@ -143,18 +144,26 @@ int64_t safe64_decode_feed(const char* src_buffer,
         KSLOG_DEBUG("E Remainder src = %d, dst = %d", src_remainder, dst_remainder);
         if(dst_remainder < 0)
         {
+            KSLOG_DEBUG("Error: dst_remainder (%d) < 0", dst_remainder);
             return SAFE64_ERROR_SOURCE_DATA_MISSING;
         }
         if((src_group_count * dst_bytes_per_group + dst_remainder) > dst_length)
         {
+            KSLOG_DEBUG("Error: require dst buffer length %d, but only have %d",
+                src_group_count * dst_bytes_per_group + dst_remainder, dst_length);
             return SAFE64_ERROR_NOT_ENOUGH_ROOM;
         }
 
-        int32_t accumulator = 0;
+        uint32_t accumulator = 0;
         for(int i = 0; i < src_remainder; i++)
         {
             accumulator = (accumulator << src_bits_per_byte) | alphabet[(int)(*src++)];
             KSLOG_DEBUG("E Accumulate %c (%02x). Total = %x", src[-1], alphabet[(int)src[-1]], accumulator);
+        }
+        if(accumulator > max_accumulator_value)
+        {
+            KSLOG_DEBUG("Error: accumulator (%x) > max accum %x", accumulator, max_accumulator_value);
+            return SAFE64_ERROR_INVALID_SOURCE_DATA;
         }
         int phantom_bits = src_remainder * src_bits_per_byte - dst_remainder * dst_bits_per_byte;
         KSLOG_DEBUG("E Phantom bits: %d", phantom_bits);
@@ -192,7 +201,6 @@ int64_t safe64_encode_feed(const unsigned char* src_buffer,
                            int64_t dst_length,
                            bool is_end_of_data)
 {
-    const int32_t max_accumulator_value = (1 << (DECODED_BITS_PER_BYTE * DECODED_BYTES_PER_GROUP)) - 1;
     const int32_t src_bytes_per_group = DECODED_BYTES_PER_GROUP;
     const int32_t dst_bytes_per_group = ENCODED_BYTES_PER_GROUP;
     const int32_t src_bits_per_byte = DECODED_BITS_PER_BYTE;
@@ -216,10 +224,6 @@ int64_t safe64_encode_feed(const unsigned char* src_buffer,
             accumulator = (accumulator << src_bits_per_byte) | *src++;
             KSLOG_DEBUG("Accumulate %02x. Total = %x", src[-1], accumulator);
         }
-        if(accumulator > max_accumulator_value)
-        {
-            return SAFE64_ERROR_INVALID_SOURCE_DATA;
-        }
         for(int i = dst_bytes_per_group-1; i >= 0; i--)
         {
             *dst++ = alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask];
@@ -236,10 +240,6 @@ int64_t safe64_encode_feed(const unsigned char* src_buffer,
         src_remainder = src_length - src_group_count * src_bytes_per_group;
         int64_t dst_remainder = src_to_dst_remainder[src_remainder];
         KSLOG_DEBUG("E Remainder src = %d, dst = %d", src_remainder, dst_remainder);
-        if(dst_remainder < 0)
-        {
-            return SAFE64_ERROR_SOURCE_DATA_MISSING;
-        }
         if((src_group_count * dst_bytes_per_group + dst_remainder) > dst_length)
         {
             return SAFE64_ERROR_NOT_ENOUGH_ROOM;
