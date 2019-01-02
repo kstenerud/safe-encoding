@@ -22,13 +22,13 @@ void assert_encode_decode(std::string expected_encoded, std::vector<unsigned cha
 	int64_t actual_encoded_length = safe64_get_encoded_length(expected_decoded.size());
 	ASSERT_EQ(expected_encoded_length, actual_encoded_length);
 
-	std::vector<char> encode_buffer(expected_encoded_length);
+	std::vector<char> encode_buffer(1000);
 	int64_t expected_encode_used_bytes = expected_encoded.size();
 	int64_t actual_encode_used_bytes = safe64_encode(expected_decoded.data(),
 		                                             expected_decoded.size(),
 		                                             encode_buffer.data(),
 		                                             encode_buffer.size());
-	std::string actual_encoded(encode_buffer.begin(), encode_buffer.end());
+	std::string actual_encoded(encode_buffer.begin(), encode_buffer.begin() + actual_encode_used_bytes);
 	ASSERT_EQ(actual_encode_used_bytes, expected_encode_used_bytes);
 	ASSERT_EQ(expected_encoded, actual_encoded);
 
@@ -36,12 +36,13 @@ void assert_encode_decode(std::string expected_encoded, std::vector<unsigned cha
 	int64_t actual_decoded_length = safe64_get_decoded_length(expected_encoded.size());
 	ASSERT_GE(expected_decoded_length, actual_decoded_length);
 
-	std::vector<unsigned char> actual_decoded(expected_decoded_length);
+	std::vector<unsigned char> decode_buffer(1000);
 	int64_t expected_decode_used_bytes = expected_decoded.size();
 	int64_t actual_decode_used_bytes = safe64_decode(expected_encoded.data(),
 		                                             expected_encoded.size(),
-		                                             actual_decoded.data(),
-		                                             actual_decoded.size());
+		                                             decode_buffer.data(),
+		                                             decode_buffer.size());
+	std::vector<unsigned char> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
 	ASSERT_EQ(expected_decode_used_bytes, actual_decode_used_bytes);
 	ASSERT_EQ(expected_decoded, actual_decoded);
 }
@@ -55,8 +56,8 @@ void assert_decode(std::string expected_encoded, std::vector<unsigned char> expe
 		                                             expected_encoded.size(),
 		                                             decode_buffer.data(),
 		                                             decode_buffer.size());
-	ASSERT_GE(expected_decode_used_bytes, actual_decode_used_bytes);
 	std::vector<unsigned char> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
+	ASSERT_GE(expected_decode_used_bytes, actual_decode_used_bytes);
 	ASSERT_EQ(expected_decoded, actual_decoded);
 }
 
@@ -127,3 +128,7 @@ TEST_DECODE(space_6, "zr6SDd 7", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 TEST_DECODE(space_7, "zr6SDd7 ", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
 TEST_DECODE(lots_of_whitespace, "z\t\tr\r\n\n 6   SD\t \t\td7", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+
+TEST_ENCODE_DECODE(example_1, "DG91sN3tqNgtI5DS07k", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
+TEST_ENCODE_DECODE(example_2, "tW9abzVsQMg0aItgJrhV", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
+TEST_ENCODE_DECODE(example_3, "7S4xEm60X8_lGOPhn8Otq-", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
