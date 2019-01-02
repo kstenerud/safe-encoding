@@ -20,6 +20,7 @@ Features:
 
 ### Safe32 Additional Features:
 
+ * Useful for human input situations such as activation codes.
  * Easily confusable characters & digits are interchangeable.
  * Uppercase and lowercase characters are interchangeable.
 
