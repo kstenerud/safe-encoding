@@ -1,0 +1,10 @@
+get_filename_component(SAFE64_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${SAFE64_CMAKE_DIR})
+
+if(NOT TARGET SAFE64::SAFE64)
+    include("${SAFE64_CMAKE_DIR}/SAFE64Targets.cmake")
+endif()
+
+set(SAFE64_LIBRARIES SAFE64::SAFE64)
