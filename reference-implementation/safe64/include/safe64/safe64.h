@@ -51,12 +51,12 @@ int64_t safe64_get_decoded_length(int64_t encoded_length);
  * @param dst_buffer A buffer to decode into.
  * @param dst_length Length of the destination buffer.
  * @param is_end_of_data If true, this is the last packet of data to decode.
- * @return The number of source bytes consumed, or a negative value as an error code.
+ * @return 0 on success, or a negative value as an error code.
  */
-int64_t safe64_decode_feed(const char* src_buffer,
-                           int64_t src_length,
-                           unsigned char* dst_buffer,
-                           int64_t dst_length,
+int64_t safe64_decode_feed(const char** src_buffer_ptr,
+                           const char* src_buffer_end,
+                           unsigned char** dst_buffer_ptr,
+                           unsigned char* dst_buffer_end,
                            bool is_end_of_data);
 
 int64_t safe64_decode(const char* src_buffer,
@@ -66,10 +66,10 @@ int64_t safe64_decode(const char* src_buffer,
 
 int64_t safe64_get_encoded_length(int64_t decoded_length);
 
-int64_t safe64_encode_feed(const unsigned char* src_buffer,
-                           int64_t src_length,
-                           char* dst_buffer,
-                           int64_t dst_length,
+int64_t safe64_encode_feed(const unsigned char** src_buffer_ptr,
+                           const unsigned char* src_buffer_end,
+                           char** dst_buffer_ptr,
+                           char* dst_buffer_end,
                            bool is_end_of_data);
 
 int64_t safe64_encode(const unsigned char* src_buffer,

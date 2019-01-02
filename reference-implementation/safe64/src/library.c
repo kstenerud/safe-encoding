@@ -11,43 +11,45 @@
 #define ENCODED_BITS_PER_BYTE 6
 #define DECODED_BITS_PER_BYTE 8
 
-
-static const int32_t g_decode_alphabet[] =
+#define CHARACTER_CODE_ERROR 0x7f
+#define CHARACTER_CODE_WHITESPACE 0x7e
+static const char g_decode_alphabet[] =
 {
-#define ERRR INT_MAX
-    // Control chars
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    /* -   */ ERRR, ERRR, ERRR, ERRR, ERRR, 0x00, ERRR, ERRR,
-    /* 0-7 */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-    /* 8-9 */ 0x09, 0x0a, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    /* A-G */ ERRR, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11,
-    /* H-O */ 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
-    /* P-W */ 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21,
-    /* X-_ */ 0x22, 0x23, 0x24, ERRR, ERRR, ERRR, ERRR, 0x25,
-    /* a-g */ ERRR, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c,
-    /* h-o */ 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34,
-    /* p-w */ 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c,
-    /* x-z */ 0x3d, 0x3e, 0x3f, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
-    ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+#define ERRR CHARACTER_CODE_ERROR
+#define WHTE CHARACTER_CODE_WHITESPACE
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+/* wh sp */ ERRR, WHTE, WHTE, ERRR, ERRR, WHTE, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+/* space */ WHTE, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+/* -     */ ERRR, ERRR, ERRR, ERRR, ERRR, 0x00, ERRR, ERRR,
+/* 0-7   */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+/* 8-9   */ 0x09, 0x0a, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+/* A-G   */ ERRR, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11,
+/* H-O   */ 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+/* P-W   */ 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21,
+/* X-Z,_ */ 0x22, 0x23, 0x24, ERRR, ERRR, ERRR, ERRR, 0x25,
+/* a-g   */ ERRR, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c,
+/* h-o   */ 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34,
+/* p-w   */ 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c,
+/* x-z   */ 0x3d, 0x3e, 0x3f, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+            ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR, ERRR,
+#undef WHTE
 #undef ERRR
 };
 
@@ -65,12 +67,11 @@ static const char g_encode_alphabet[] =
 
 static const int g_encoded_remainder_to_decoded_remainder[] =
 {
-#define ERROR_STATE INT_MIN
     0,
-    ERROR_STATE,
+    1,
     1,
     2,
-#undef ERROR_STATE
+    3,
 };
 
 static const int g_decoded_remainder_to_encoded_remainder[] =
@@ -78,6 +79,24 @@ static const int g_decoded_remainder_to_encoded_remainder[] =
     0,
     2,
     3,
+    4,
+};
+
+static const int g_encoded_remainder_to_bit_padding[] =
+{
+    0,
+    0,
+    4,
+    2,
+    0,
+};
+
+static const int g_decoded_remainder_to_bit_padding[] =
+{
+    0,
+    4,
+    2,
+    0,
 };
 
 const char* safe64_version()
@@ -92,92 +111,94 @@ int64_t safe64_get_decoded_length(const int64_t encoded_length)
     return groups * DECODED_BYTES_PER_GROUP + remainder;
 }
 
-int64_t safe64_decode_feed(const char* src_buffer,
-                           int64_t src_length,
-                           unsigned char* dst_buffer,
-                           int64_t dst_length,
+int64_t safe64_decode_feed(const char** src_buffer_ptr,
+                           const char* src_buffer_end,
+                           unsigned char** dst_buffer_ptr,
+                           unsigned char* dst_buffer_end,
                            bool is_end_of_data)
 {
-    const uint32_t max_accumulator_value = (1 << (DECODED_BITS_PER_BYTE * DECODED_BYTES_PER_GROUP)) - 1;
-    const int32_t src_bytes_per_group = ENCODED_BYTES_PER_GROUP;
-    const int32_t dst_bytes_per_group = DECODED_BYTES_PER_GROUP;
-    const int32_t src_bits_per_byte = ENCODED_BITS_PER_BYTE;
-    const int32_t dst_bits_per_byte = DECODED_BITS_PER_BYTE;
+    int64_t accumulator = 0;
+    int src_group_char_count = 0;
+    const char* src = *src_buffer_ptr;
+    unsigned char* dst = *dst_buffer_ptr;
+
+    const char* const src_end = src_buffer_end;
+    const unsigned char* const dst_end = dst_buffer_end;
+    const int src_bits_per_byte = ENCODED_BITS_PER_BYTE;
+    const int dst_bits_per_byte = DECODED_BITS_PER_BYTE;
+    const char* const alphabet = g_decode_alphabet;
+    const int src_chars_per_group = ENCODED_BYTES_PER_GROUP;
     const int dst_mask = 0xff;
-    const int32_t* const alphabet = g_decode_alphabet;
     const int* const src_to_dst_remainder = g_encoded_remainder_to_decoded_remainder;
-    const char* src = src_buffer;
-    unsigned char* dst = dst_buffer;
+    const int* const remainder_to_bit_padding = g_encoded_remainder_to_bit_padding;
 
-    int64_t src_group_count = src_length / src_bytes_per_group;
-    int64_t dst_group_count = dst_length / dst_bytes_per_group;
-    int64_t group_count = src_group_count <= dst_group_count ? src_group_count : dst_group_count;
+    KSLOG_DEBUG("Decode %d chars into %d bytes, ending %d", src_end - src, dst_end - dst, is_end_of_data);
 
-    KSLOG_DEBUG("Decode %d chars into %d bytes, ending %d", src_length, dst_length, is_end_of_data);
-    for(int64_t group = 0; group < group_count; group++)
+#define WRITE_BYTES(BYTE_COUNT) \
+    { \
+        int bytes_to_write = src_to_dst_remainder[BYTE_COUNT]; \
+        if(dst + bytes_to_write > dst_end) \
+        { \
+            KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
+            *src_buffer_ptr = src; \
+            *dst_buffer_ptr = dst; \
+            return SAFE64_ERROR_NOT_ENOUGH_ROOM; \
+        } \
+        for(int i = bytes_to_write-1; i >= 0; i--) \
+        { \
+            *dst++ = (accumulator >> (dst_bits_per_byte * i)) & dst_mask; \
+            KSLOG_DEBUG("Write: Extract pos %d: %02x", \
+                (dst_bits_per_byte * i), \
+                (accumulator >> (dst_bits_per_byte * i)) & dst_mask); \
+        } \
+    }
+
+    while(src < src_end)
     {
-        uint32_t accumulator = 0;
-        for(int i = 0; i < src_bytes_per_group; i++)
+        int code = alphabet[(int)(*src++)];
+        if(code == CHARACTER_CODE_WHITESPACE)
         {
-            accumulator = (accumulator << src_bits_per_byte) | alphabet[(int)(*src++)];
-            KSLOG_DEBUG("Accumulate %c (%02x). Total = %x", src[-1], alphabet[(int)src[-1]], accumulator);
+            KSLOG_TRACE("Whitespace");
+            continue;
         }
-        if(accumulator > max_accumulator_value)
+        if(code == CHARACTER_CODE_ERROR)
         {
-            KSLOG_DEBUG("Error: accumulator (%x) > max accum %x", accumulator, max_accumulator_value);
+            KSLOG_DEBUG("Error: Invalid source data: %02x: [%c]", src[-1], src[-1]);
+            *src_buffer_ptr = src - 1;
+            *dst_buffer_ptr = dst;
             return SAFE64_ERROR_INVALID_SOURCE_DATA;
         }
-        for(int i = dst_bytes_per_group-1; i >= 0; i--)
+        accumulator = (accumulator << src_bits_per_byte) | code;
+        src_group_char_count++;
+        KSLOG_DEBUG("Accumulate %c (%02x). Total = %x, count %d", src[-1], code, accumulator, src_group_char_count);
+        if(src_group_char_count >= src_chars_per_group)
         {
-            *dst++ = (accumulator >> (dst_bits_per_byte * i)) & dst_mask;
-            KSLOG_DEBUG("Extract pos %d: %02x",
-                (dst_bits_per_byte * i),
-                (accumulator >> (dst_bits_per_byte * i)) & dst_mask);
+            WRITE_BYTES(src_group_char_count);
+            src_group_char_count = 0;
+            accumulator = 0;
         }
     }
 
-    int64_t src_remainder = 0;
-    if(is_end_of_data)
+    if(src_group_char_count > 0)
     {
-        src_remainder = src_length - src_group_count * src_bytes_per_group;
-        int64_t dst_remainder = src_to_dst_remainder[src_remainder];
-        KSLOG_DEBUG("E Remainder src = %d, dst = %d", src_remainder, dst_remainder);
-        if(dst_remainder < 0)
+        if(is_end_of_data)
         {
-            KSLOG_DEBUG("Error: dst_remainder (%d) < 0", dst_remainder);
-            return SAFE64_ERROR_SOURCE_DATA_MISSING;
+            int phantom_bits = remainder_to_bit_padding[src_group_char_count];
+            KSLOG_DEBUG("E Phantom bits: %d", phantom_bits);
+            accumulator >>= phantom_bits;
+            WRITE_BYTES(src_group_char_count);
         }
-        if((src_group_count * dst_bytes_per_group + dst_remainder) > dst_length)
+        else
         {
-            KSLOG_DEBUG("Error: require dst buffer length %d, but only have %d",
-                src_group_count * dst_bytes_per_group + dst_remainder, dst_length);
-            return SAFE64_ERROR_NOT_ENOUGH_ROOM;
-        }
-
-        uint32_t accumulator = 0;
-        for(int i = 0; i < src_remainder; i++)
-        {
-            accumulator = (accumulator << src_bits_per_byte) | alphabet[(int)(*src++)];
-            KSLOG_DEBUG("E Accumulate %c (%02x). Total = %x", src[-1], alphabet[(int)src[-1]], accumulator);
-        }
-        if(accumulator > max_accumulator_value)
-        {
-            KSLOG_DEBUG("Error: accumulator (%x) > max accum %x", accumulator, max_accumulator_value);
-            return SAFE64_ERROR_INVALID_SOURCE_DATA;
-        }
-        int phantom_bits = src_remainder * src_bits_per_byte - dst_remainder * dst_bits_per_byte;
-        KSLOG_DEBUG("E Phantom bits: %d", phantom_bits);
-        accumulator >>= phantom_bits;
-        for(int i = dst_remainder-1; i >= 0; i--)
-        {
-            *dst++ = (accumulator >> (dst_bits_per_byte * i)) & dst_mask;
-            KSLOG_DEBUG("E Extract pos %d: %02x",
-                (dst_bits_per_byte * i),
-                (accumulator >> (dst_bits_per_byte * i)) & dst_mask);
+            src -= src_group_char_count;
         }
     }
 
-    return src_group_count * src_bytes_per_group + src_remainder;
+    *src_buffer_ptr = src;
+    *dst_buffer_ptr = dst;
+
+    return 0;
+#undef WRITE_BYTES
 }
 
 int64_t safe64_decode(const char* src_buffer,
@@ -185,7 +206,14 @@ int64_t safe64_decode(const char* src_buffer,
                       unsigned char* dst_buffer,
                       int64_t dst_length)
 {
-    return safe64_decode_feed(src_buffer, src_length, dst_buffer, dst_length, true);
+    const char* src = src_buffer;
+    unsigned char* dst = dst_buffer;
+    int64_t result = safe64_decode_feed(&src, src + src_length, &dst, dst + dst_length, true);
+    if(result < 0)
+    {
+        return result;
+    }
+    return dst - dst_buffer;
 }
 
 int64_t safe64_get_encoded_length(const int64_t decoded_length)
@@ -195,76 +223,83 @@ int64_t safe64_get_encoded_length(const int64_t decoded_length)
     return groups * 4 + remainder;
 }
 
-int64_t safe64_encode_feed(const unsigned char* src_buffer,
-                           int64_t src_length,
-                           char* dst_buffer,
-                           int64_t dst_length,
+int64_t safe64_encode_feed(const unsigned char** src_buffer_ptr,
+                           const unsigned char* src_buffer_end,
+                           char** dst_buffer_ptr,
+                           char* dst_buffer_end,
                            bool is_end_of_data)
 {
-    const int32_t src_bytes_per_group = DECODED_BYTES_PER_GROUP;
-    const int32_t dst_bytes_per_group = ENCODED_BYTES_PER_GROUP;
-    const int32_t src_bits_per_byte = DECODED_BITS_PER_BYTE;
-    const int32_t dst_bits_per_byte = ENCODED_BITS_PER_BYTE;
-    const int dst_mask = 0x3f;
+    int64_t accumulator = 0;
+    int src_group_char_count = 0;
+    const unsigned char* src = *src_buffer_ptr;
+    char* dst = *dst_buffer_ptr;
+
+    const unsigned char* const src_end = src_buffer_end;
+    const char* const dst_end = dst_buffer_end;
+    const int src_bits_per_byte = DECODED_BITS_PER_BYTE;
+    const int dst_bits_per_byte = ENCODED_BITS_PER_BYTE;
     const char* const alphabet = g_encode_alphabet;
+    const int src_chars_per_group = DECODED_BYTES_PER_GROUP;
+    const int dst_mask = 0x3f;
     const int* const src_to_dst_remainder = g_decoded_remainder_to_encoded_remainder;
-    const unsigned char* src = src_buffer;
-    char* dst = dst_buffer;
+    const int* const remainder_to_bit_padding = g_decoded_remainder_to_bit_padding;
 
-    int64_t src_group_count = src_length / src_bytes_per_group;
-    int64_t dst_group_count = dst_length / dst_bytes_per_group;
-    int64_t group_count = src_group_count <= dst_group_count ? src_group_count : dst_group_count;
+    KSLOG_DEBUG("Encode %d bytes into %d chars, ending %d", src_end - src, dst_end - dst, is_end_of_data);
 
-    KSLOG_DEBUG("Encode %d bytes into %d chars, ending %d", src_length, dst_length, is_end_of_data);
-    for(int64_t group = 0; group < group_count; group++)
+#define WRITE_BYTES(SRC_BYTE_COUNT) \
+    { \
+        int bytes_to_write = src_to_dst_remainder[SRC_BYTE_COUNT]; \
+        KSLOG_DEBUG("Writing %d bytes (%d)", bytes_to_write, SRC_BYTE_COUNT); \
+        if(dst + bytes_to_write > dst_end) \
+        { \
+            KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
+            *src_buffer_ptr = src; \
+            *dst_buffer_ptr = dst; \
+            return SAFE64_ERROR_NOT_ENOUGH_ROOM; \
+        } \
+        for(int i = bytes_to_write-1; i >= 0; i--) \
+        { \
+            *dst++ = alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask]; \
+            KSLOG_DEBUG("Write: Extract pos %d: %02x: %c", \
+                (dst_bits_per_byte * i), \
+                (accumulator >> (dst_bits_per_byte * i)) & dst_mask, \
+                alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask]); \
+        } \
+    }
+
+    while(src < src_end)
     {
-        int32_t accumulator = 0;
-        for(int i = 0; i < src_bytes_per_group; i++)
+        accumulator = (accumulator << src_bits_per_byte) | *src++;
+        src_group_char_count++;
+        KSLOG_DEBUG("Accumulate %02x. Total = %x, count %d", src[-1], accumulator, src_group_char_count);
+        if(src_group_char_count >= src_chars_per_group)
         {
-            accumulator = (accumulator << src_bits_per_byte) | *src++;
-            KSLOG_DEBUG("Accumulate %02x. Total = %x", src[-1], accumulator);
-        }
-        for(int i = dst_bytes_per_group-1; i >= 0; i--)
-        {
-            *dst++ = alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask];
-            KSLOG_DEBUG("Extract pos %d: %02x and convert to %c",
-                (dst_bits_per_byte * i),
-                (accumulator >> (dst_bits_per_byte * i)) & dst_mask,
-                dst[-1]);
+            WRITE_BYTES(src_group_char_count);
+            src_group_char_count = 0;
+            accumulator = 0;
         }
     }
 
-    int64_t src_remainder = 0;
-    if(is_end_of_data)
+    if(src_group_char_count > 0)
     {
-        src_remainder = src_length - src_group_count * src_bytes_per_group;
-        int64_t dst_remainder = src_to_dst_remainder[src_remainder];
-        KSLOG_DEBUG("E Remainder src = %d, dst = %d", src_remainder, dst_remainder);
-        if((src_group_count * dst_bytes_per_group + dst_remainder) > dst_length)
+        if(is_end_of_data)
         {
-            return SAFE64_ERROR_NOT_ENOUGH_ROOM;
+            int phantom_bits = remainder_to_bit_padding[src_group_char_count];
+            KSLOG_DEBUG("E Phantom bits: %d", phantom_bits);
+            accumulator <<= phantom_bits;
+            WRITE_BYTES(src_group_char_count);
         }
-
-        int32_t accumulator = 0;
-        for(int i = 0; i < src_remainder; i++)
+        else
         {
-            accumulator = (accumulator << src_bits_per_byte) | *src++;
-            KSLOG_DEBUG("E Accumulate %02x. Total = %x", src[-1], accumulator);
-        }
-        int phantom_bits = dst_remainder * dst_bits_per_byte - src_remainder * src_bits_per_byte;
-        KSLOG_DEBUG("E Phantom bits: %d", phantom_bits);
-        accumulator <<= phantom_bits;
-        for(int i = dst_remainder-1; i >= 0; i--)
-        {
-            *dst++ = alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask];
-            KSLOG_DEBUG("E Extract pos %d: %02x and convert to %c",
-                (dst_bits_per_byte * i),
-                (accumulator >> (dst_bits_per_byte * i)) & dst_mask,
-                dst[-1]);
+            src -= src_group_char_count;
         }
     }
 
-    return src_group_count * src_bytes_per_group + src_remainder;
+    *src_buffer_ptr = src;
+    *dst_buffer_ptr = dst;
+
+    return 0;
+#undef WRITE_BYTES
 }
 
 int64_t safe64_encode(const unsigned char* src_buffer,
@@ -272,6 +307,13 @@ int64_t safe64_encode(const unsigned char* src_buffer,
                       char* dst_buffer,
                       int64_t dst_length)
 {
-    return safe64_encode_feed(src_buffer, src_length, dst_buffer, dst_length, true);
+    const unsigned char* src = src_buffer;
+    char* dst = dst_buffer;
+    int64_t result = safe64_encode_feed(&src, src + src_length, &dst, dst + dst_length, true);
+    if(result < 0)
+    {
+        return result;
+    }
+    return dst - dst_buffer;
 }
 
