@@ -8,7 +8,7 @@ Safe64 provides a binary data encoding scheme that is safe to be passed through 
  * No padding characters
  * No escaping necessary
  * Safe for use in URLs
- * Safe for use as filenames
+ * Safe for use in filenames
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
  * Liberal whitespace rules
@@ -106,8 +106,8 @@ The length encoding uses the lower 5 bits for data, and the high bit as a contin
 | ------------ | - | - | - | - | - | - |
 | **Purpose**  | c | x | x | x | x | x |
 
-c = continuation bit
-x = data
+ * c = continuation bit
+ * x = data
 
 When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
 

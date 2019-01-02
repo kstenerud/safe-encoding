@@ -29,7 +29,7 @@ Advantages over base64 and base32:
  * No padding characters
  * No escaping necessary
  * Liberal whitespace rules
- * Safe for use as filenames
+ * Safe for use in filenames
  * No proliferation of incompatible offshoots
  * Better end-of-field and truncation detection
  * Sortable in generic text sorting algorithms (such as file listings)
