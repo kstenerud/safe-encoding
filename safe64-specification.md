@@ -18,9 +18,20 @@ Safe64 provides a binary data encoding scheme that is safe to be passed through 
 Encoding
 --------
 
-Safe64 encodes 6 bits into each character, effectively encoding 3 bytes into every 4 characters, for a total size bloat of 1.33.
+Safe64 encoding uses an alphabet of 64 characters from the single-byte UTF-8 set to represent 6-bit values. These characters are grouped together by 4 (forming 24 bits), which can then be used to encode 3 bytes of data per group. This multiplies the size of the encoded data by a factor of 1.33.
 
-Safe64 uses the following alphabet to represent 6-bit values, all of which are safe for known text systems:
+    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc]
+    Encoded:  [aaaaaa] [aabbbb] [bbbbcc] [cccccc]
+
+When there are less than 3 bytes of source data remaining, a partial group is created, with unused bits set to 0:
+
+    Original: [aaaaaaaa] [bbbbbbbb]
+    Encoded:  [aaaaaa] [aabbbb] [bbbb00]
+
+    Original: [aaaaaaaa]
+    Encoded:  [aaaaaa] [aa0000]
+
+The 6-bit alphabet, chosen for safety in known text systems:
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- |
@@ -41,7 +52,7 @@ Safe64 uses the following alphabet to represent 6-bit values, all of which are s
 | **0e** | `D`  | **1e** | `T`  | **2e** | `i`  | **3e** | `y`  |
 | **0f** | `E`  | **1f** | `U`  | **2f** | `j`  | **3f** | `z`  |
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8 and ASCII, so that the resulting encoded text will sort in the same order as the data it represents.
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
 
 Whitespace
@@ -58,27 +69,29 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 000d       | Carriage Return |
 | 0020       | Space           |
 
+Whitespace is optional, and can be forbidden by explicit agreement between the sending and receiving party.
+
 
 Termination
 -----------
 
-Termination of a safe64 sequence can be inferred by the number of trailing characters after the last group of 4:
+In the last (possibly partial) group, the number of characters indicates how many bytes of data remain to be decoded:
 
-| Trailing characters | Remaining bytes |
-| ------------------- | --------------- |
-| 0                   | 0               |
-| 1                   | invalid         |
-| 2                   | 1               |
-| 3                   | 2               |
+| Characters | Remaining Bytes |
+| ---------- | --------------- |
+| 1          | invalid         |
+| 2          | 1               |
+| 3          | 2               |
+| 4          | 3               |
 
-Any excess bits after the last 8-bit sequence must be set to 0 by the encoder, and must be discarded by the decoder.
+Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
 
 
 
 Safe64l
 =======
 
-While safe64 is sufficient for most systems, there are transmission mediums that do not guarantee detection of truncated data. In such a case, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe64 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such a case, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
 
 
 Encoding
@@ -95,7 +108,7 @@ The length encoding uses the lower 5 bits for data, and the high bit as a contin
 c = continuation bit
 x = data
 
-When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on). This allows safe64l encoded data to sort naturally in generic text sorting algorithms, with longer data sequences ranking higher.
+When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |

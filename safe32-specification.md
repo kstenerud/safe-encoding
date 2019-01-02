@@ -1,7 +1,7 @@
 Safe32 Encoding
 ===============
 
-Safe32 provides a binary data encoding scheme that is safe to be input by humans, or passed through processing systems that expect human readable text.
+Safe32 provides a binary data encoding scheme that is safe to be input by humans, and safe to be passed through processing systems that expect human readable text.
 
 ### Features:
 
@@ -20,9 +20,26 @@ Safe32 provides a binary data encoding scheme that is safe to be input by humans
 Encoding
 --------
 
-Safe32 encodes 5 bits into each character, effectively encoding 5 bytes of data into every 8 characters, for a total size bloat of 1.6.
+Safe64 encoding uses an alphabet of 32 characters from the single-byte UTF-8 set to represent 5-bit values. These characters are grouped together by 8 (forming 40 bits), which can then be used to encode 5 bytes of data per group. This multiplies the size of the encoded data by a factor of 1.6.
 
-Safe32 uses the following alphabet to represent 5-bit values, all of which are safe for known text systems:
+    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd] [eeeeeeee]
+    Encoded:  [aaaaa] [aaabb] [bbbbb] [bcccc] [ccccd] [ddddd] [ddeee] [eeeee]
+
+When there are less than 5 bytes of source data remaining, a partial group is created, with unused bits set to 0:
+
+    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd]
+    Encoded:  [aaaaa] [aaabb] [bbbbb] [bcccc] [ccccd] [ddddd] [dd000]
+
+    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc]
+    Encoded:  [aaaaa] [aaabb] [bbbbb] [bcccc] [cccc0]
+
+    Original: [aaaaaaaa] [bbbbbbbb]
+    Encoded:  [aaaaa] [aaabb] [bbbbb] [b0000]
+
+    Original: [aaaaaaaa]
+    Encoded:  [aaaaa] [aaa00]
+
+The 5-bit alphabet, chosen for safety in known text systems, and ease of human input:
 
 | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- |
@@ -43,21 +60,24 @@ Safe32 uses the following alphabet to represent 5-bit values, all of which are s
 | **0e** | `f`  | **1e** | `y`  |
 | **0f** | `g`  | **1f** | `z`  |
 
-Where:
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
- * Uppercase can be substituted for lowercase when input by humans.
- * `o` and `O` can substitute for `0` when input by humans.
- * There is no `1`, `i`, or `l`, because they are too easily confused.
+In order to make human input less error-prone, the following substitutions are allowed in the encoded text:
 
-A decoder must accept substitutes. An encoder must not output substitutes.
+ * Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`).
+ * `o` and `O` may be substituted for `0`.
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8 and ASCII, so that the resulting encoded text will sort in the same order as the data it represents.
+A human may input substitutes. A decoder must accept substitutes. An encoder must not output substitutes.
 
 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace as needed by the medium it will be transferred across. For example, some mediums may have a maximum line length, or require indentation. It is up to the encoder to decide when and how whitespace will occur. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream may contain whitespace as needed by the medium it will be transferred across. For example, some mediums may have a maximum line length, or require indentation.
+
+For human input, it may be helpful to break up long sequences into shorter chunks using whitespace to make the sequence easier to input without losing your place.
+
+It is up to the encoder or human to decide when and how whitespace will occur. A decoder must accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -67,32 +87,39 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 000a       | Line Feed       |
 | 000d       | Carriage Return |
 | 0020       | Space           |
+| 002D       | Dash `-`        |
+
+Note: Dash is included as "whitespace" to allow human input sequences such as:
+
+    ah4f-22um-8221-4az1
+
+Whitespace is optional, and can be forbidden by explicit agreement between the sending and receiving party.
 
 
 Termination
 -----------
 
-Termination of a safe32 sequence can be inferred by the number of trailing characters after the last group of 8:
+In the last (possibly partial) group, the number of characters indicates how many bytes of data remain to be decoded:
 
-| Trailing characters | Remaining bytes |
-| ------------------- | --------------- |
-| 0                   | 0               |
-| 1                   | invalid         |
-| 2                   | 1               |
-| 3                   | invalid         |
-| 4                   | 2               |
-| 5                   | 3               |
-| 6                   | invalid         |
-| 7                   | 4               |
+| Characters | Remaining Bytes |
+| ---------- | --------------- |
+| 1          | invalid         |
+| 2          | 1               |
+| 3          | invalid         |
+| 4          | 2               |
+| 5          | 3               |
+| 6          | invalid         |
+| 7          | 4               |
+| 8          | 5               |
 
-Any excess bits after the last 8-bit sequence must be set to 0 by the encoder, and must be discarded by the decoder.
+Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
 
 
 
 Safe32l
 =======
 
-While safe32 is sufficient for most systems, there are transmission mediums that do not guarantee detection of truncated data. In such a case, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe32 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such a case, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
 
 
 Encoding
@@ -109,7 +136,7 @@ The length encoding uses the lower 4 bits for data, and the high bit as a contin
 c = continuation bit
 x = data
 
-When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 4 bits, then the next lower 4 bits, and so on). This allows safe32l encoded data to sort naturally in generic text sorting algorithms, with longer data sequences ranking higher.
+When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 4 bits, then the next lower 4 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
