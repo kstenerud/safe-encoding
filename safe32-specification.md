@@ -152,7 +152,7 @@ When the continuation bit is set to 1, the length field is continued in the next
 | 6          |   24 |                 16777215 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **source** data, not the encoded data.
+Note: The length field encodes the length of the **non-encoded source data**, not the encoded data or the length field itself.
 
 
 Whitespace
