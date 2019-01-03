@@ -1,0 +1,10 @@
+get_filename_component(SAFE32_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${SAFE32_CMAKE_DIR})
+
+if(NOT TARGET SAFE32::SAFE32)
+    include("${SAFE32_CMAKE_DIR}/SAFE32Targets.cmake")
+endif()
+
+set(SAFE32_LIBRARIES SAFE32::SAFE32)
