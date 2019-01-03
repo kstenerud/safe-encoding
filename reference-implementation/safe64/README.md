@@ -1,15 +1,7 @@
-Reference Implementation for Concise Binary Encoding
-====================================================
+Reference Implementation for the Safe64 Encoding System
+=======================================================
 
 A C implementation to demonstrate a simple SAFE64 codec.
-
-
-Assumptions
------------
-
- * Assumes densely packed decimal encoding for C decimal types (_Decimal32, _Decimal64, _Decimal128). This is the default for gcc and other compilers using decNumber.
- * Assumes a little endian host.
-
 
 
 Requirements
@@ -24,7 +16,6 @@ Requirements
 Dependencies
 ------------
 
- * decimal/decimal (if using C++): For C++ decimal float types
  * stdbool.h: For bool type
  * stdint.h: Fot int types
 
@@ -42,57 +33,88 @@ Building
 Usage
 -----
 
+Note: Using C++ to make the string & data code simpler.
+
 ### Decoding
 
-```c
-    char decode_process_backing_store[safe64_decode_process_size()];
-    struct safe64_decode_process* decode_process = (struct safe64_decode_process*)decode_process_backing_store;
-    const safe64_decode_callbacks callbacks =
-    {
-        // TODO: Fill in callback pointers
-    };
-    void* context = my_get_context_data();
-    unsigned char* decode_buffer;
-    int64_t bytes_received;
-    safe64_decode_status status = SAFE64_DECODE_STATUS_OK;
+```c++
+    std::string my_source_data = "DG91sN3tqNgtI5DS07k";
 
-    status = safe64_decode_begin(decode_process, &callbacks, context);
-    if(status != SAFE64_DECODE_STATUS_OK)
+    int64_t decoded_length = safe64_get_decoded_length(my_source_data.size());
+    std::vector<unsigned char> decode_buffer(decoded_length);
+
+    int64_t used_bytes = safe64_decode(my_source_data.data(),
+                                       my_source_data.size(),
+                                       decode_buffer.data(),
+                                       decode_buffer.size());
+    if(used_bytes < 0)
     {
-        // TODO: Do something about it
+        // TODO: used_bytes is an error code.
     }
-
-    while(my_has_more_data())
-    {
-        my_get_next_packet(&decode_buffer, &bytes_received);
-        status = safe64_decode_feed(decode_process, decode_buffer, bytes_received);
-        int64_t bytes_consumed = safe64_decode_get_buffer_offset(decode_process);
-        // Todo: Move uncomsumed bytes to the beginning of the buffer for next time around
-    }
-
-    status = safe64_decode_end(decode_process);
+    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    my_receive_decoded_data_function(decoded_data);
 ```
 
+### Decoding (with length field)
+
+```c++
+    std::string my_source_data = "DDG91sN3tqNgtI5DS07k";
+
+    int64_t decoded_length = safe64_get_decoded_length(my_source_data.size());
+    std::vector<unsigned char> decode_buffer(decoded_length);
+
+    int64_t used_bytes = safe64l_decode(my_source_data.data(),
+                                        my_source_data.size(),
+                                        decode_buffer.data(),
+                                        decode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    my_receive_decoded_data_function(decoded_data);
+```
 
 ### Encoding
 
-```c
-    char encode_process_backing_store[safe64_encode_process_size()];
-    struct safe64_encode_process* encode_process = (struct safe64_encode_process*)encode_process_backing_store;
-    unsigned char* document_buffer = my_get_document_pointer();
-    int64_t document_buffer_size = my_get_document_byte_count();
-    safe64_encode_status status = SAFE64_ENCODE_STATUS_OK;
+```C++
+    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 
-    status = safe64_encode_begin(encode_process, document_buffer, document_buffer_size);
-    if(status != SAFE64_ENCODE_STATUS_OK)
+    bool should_include_length = false;
+    int64_t encoded_length = safe64_get_encoded_length(my_source_data.size(), should_include_length);
+    std::vector<char> encode_buffer(encoded_length);
+
+    int64_t used_bytes = safe64_encode(my_source_data.data(),
+                                       my_source_data.size(),
+                                       encode_buffer.data(),
+                                       encode_buffer.size());
+    if(used_bytes < 0)
     {
-        // TODO: Do something about it
+        // TODO: used_bytes is an error code.
     }
-    status = safe64_encode_begin_list(encode_process);
-    status = safe64_encode_add_int_8(encode_process, 1);
-    status = safe64_encode_add_string(encode_process, "Testing");
-    status = safe64_encode_end_container(encode_process);
-    status = safe64_encode_end(encode_process);
+    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
+    my_receive_encoded_data_function(encoded_data);
+```
+
+### Encoding (with length field)
+
+```c++
+    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+
+    bool should_include_length = true;
+    int64_t encoded_length = safe64_get_encoded_length(my_source_data.size(), should_include_length);
+    std::vector<char> encode_buffer(encoded_length);
+
+    int64_t used_bytes = safe64l_encode(my_source_data.data(),
+                                        my_source_data.size(),
+                                        encode_buffer.data(),
+                                        encode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
+    my_receive_encoded_data_function(encoded_data);
 ```
 
 

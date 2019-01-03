@@ -1,5 +1,5 @@
 License for SAFE64 Reference Implementation
-========================================
+===========================================
 
 License Type: MIT
 

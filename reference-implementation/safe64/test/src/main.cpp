@@ -415,6 +415,9 @@ TEST_DECODE_LENGTH(_1024,     "WV-", 1024, 3)
 
 TEST_DECODE_WITH_LENGTH_STATUS(_x, "W07Mg0aIvGUIwWXn_BNw577R57aM5abzW4_i50DPrB_bbN", 15, SAFE64_ERROR_TRUNCATED_DATA)
 
+
+// Specification Examples:
+
 TEST_ENCODE_DECODE(example_1, "DG91sN3tqNgtI5DS07k", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
 TEST_ENCODE_DECODE(example_2, "tW9abzVsQMg0aItgJrhV", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
 TEST_ENCODE_DECODE(example_3, "7S4xEm60X8_lGOPhn8Otq-", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
@@ -423,3 +426,93 @@ TEST_DECODE_LENGTH(example_31,   "U",     31, 1)
 TEST_DECODE_LENGTH(example_32,   "W-",    32, 2)
 TEST_DECODE_LENGTH(example_2000, "WyF", 2000, 3)
 TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "W07Mg0aIvGUIwWXn_BNw577R57aM5abzW4_i50DPrB_bbN", {0x21, 0x7b, 0x01, 0x99, 0x3e, 0xd1, 0x7d, 0x3f, 0x21, 0x8b, 0x39, 0x4c, 0x63, 0xc1, 0x88, 0x21, 0xc1, 0x88, 0x99, 0x71, 0xa6, 0x9f, 0xf8, 0x45, 0x96, 0xe1, 0x81, 0x39, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+
+
+// README Examples:
+
+static void my_receive_decoded_data_function(std::vector<unsigned char>& data)
+{
+    (void)data;
+}
+static void my_receive_encoded_data_function(std::string& data)
+{
+    (void)data;
+}
+
+TEST(Example, decoding)
+{
+    std::string my_source_data = "DG91sN3tqNgtI5DS07k";
+
+    int64_t decoded_length = safe64_get_decoded_length(my_source_data.size());
+    std::vector<unsigned char> decode_buffer(decoded_length);
+
+    int64_t used_bytes = safe64_decode(my_source_data.data(),
+                                       my_source_data.size(),
+                                       decode_buffer.data(),
+                                       decode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    my_receive_decoded_data_function(decoded_data);
+}
+
+TEST(Example, decoding_with_length)
+{
+    std::string my_source_data = "DDG91sN3tqNgtI5DS07k";
+
+    int64_t decoded_length = safe64_get_decoded_length(my_source_data.size());
+    std::vector<unsigned char> decode_buffer(decoded_length);
+
+    int64_t used_bytes = safe64l_decode(my_source_data.data(),
+                                        my_source_data.size(),
+                                        decode_buffer.data(),
+                                        decode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    my_receive_decoded_data_function(decoded_data);
+}
+
+TEST(Example, encoding)
+{
+    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+
+    bool should_include_length = false;
+    int64_t encoded_length = safe64_get_encoded_length(my_source_data.size(), should_include_length);
+    std::vector<char> encode_buffer(encoded_length);
+
+    int64_t used_bytes = safe64_encode(my_source_data.data(),
+                                       my_source_data.size(),
+                                       encode_buffer.data(),
+                                       encode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
+    my_receive_encoded_data_function(encoded_data);
+}
+
+TEST(Example, encoding_with_length)
+{
+    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+
+    bool should_include_length = true;
+    int64_t encoded_length = safe64_get_encoded_length(my_source_data.size(), should_include_length);
+    std::vector<char> encode_buffer(encoded_length);
+
+    int64_t used_bytes = safe64l_encode(my_source_data.data(),
+                                        my_source_data.size(),
+                                        encode_buffer.data(),
+                                        encode_buffer.size());
+    if(used_bytes < 0)
+    {
+        // TODO: used_bytes is an error code.
+    }
+    std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
+    my_receive_encoded_data_function(encoded_data);
+}
