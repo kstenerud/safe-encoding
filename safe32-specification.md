@@ -119,6 +119,19 @@ Notes:
  * Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
  * Excess character lengths of 1, 3, and 6 should in theory never happen, but must nonetheless be handled by the decoder.
 
+
+Examples
+--------
+
+    Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
+    Encoded: 85a96sd288dsqfbddffha40
+
+    Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
+    Encoded: wsabe8zs82qrq0dt8tq67yv0
+
+    Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+    Encoded: 589rugt2s75akwb6kuqwt6mtv0
+
 ------------------------------------------------------------------------------
 
 
@@ -182,6 +195,19 @@ Examples
 |     15 | `01111`             | `g`          |
 |     16 | `10001 00000`       | `j0`         |
 |   2000 | `10111 11101 00000` | `rx0`        |
+
+Example: Length field & data:
+
+Data:
+
+    0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99,
+    0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8
+
+Encoded:
+
+    j0589rugt2s75akwb6kuqwt6mtv0
+
+Where `j0` is the length field (16)
 
 
 Advantages over base32 padding
