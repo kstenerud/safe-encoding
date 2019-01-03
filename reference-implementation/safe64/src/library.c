@@ -137,10 +137,11 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
 #define WRITE_BYTES(BYTE_COUNT) \
     { \
         int bytes_to_write = src_to_dst_remainder[BYTE_COUNT]; \
+        KSLOG_DEBUG("Writing %d chars as %d decoded bytes", BYTE_COUNT, bytes_to_write); \
         if(dst + bytes_to_write > dst_end) \
         { \
             KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
-            *src_buffer_ptr = src; \
+            *src_buffer_ptr = last_src; \
             *dst_buffer_ptr = dst; \
             return SAFE64_STATUS_DESTINATION_BUFFER_FULL; \
         } \
@@ -153,6 +154,7 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
         } \
     }
 
+    const char* last_src = src;
     while(src < src_end)
     {
         int code = alphabet[(int)(*src++)];
@@ -170,12 +172,13 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
         }
         accumulator = (accumulator << src_bits_per_byte) | code;
         src_group_char_count++;
-        KSLOG_DEBUG("Accumulate %c (%02x). Total = %x, count %d", src[-1], code, accumulator, src_group_char_count);
+        KSLOG_DEBUG("Accumulate #%d [%c] (%02x). Value = %x", src_group_char_count, src[-1], code, accumulator);
         if(src_group_char_count >= src_chars_per_group)
         {
             WRITE_BYTES(src_group_char_count);
             src_group_char_count = 0;
             accumulator = 0;
+            last_src = src;
         }
     }
 
@@ -192,9 +195,10 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
         {
             src -= src_group_char_count;
         }
+        last_src = src;
     }
 
-    *src_buffer_ptr = src;
+    *src_buffer_ptr = last_src;
     *dst_buffer_ptr = dst;
 
     return SAFE64_STATUS_OK;
@@ -244,39 +248,41 @@ safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
     const int* const src_to_dst_remainder = g_decoded_remainder_to_encoded_remainder;
     const int* const remainder_to_bit_padding = g_decoded_remainder_to_bit_padding;
 
-    KSLOG_DEBUG("Encode %d bytes into %d chars, ending %d", src_end - src, dst_end - dst, is_end_of_data);
+    KSLOG_DEBUG("Encode %d bytes into %d encoded chars, ending %d", src_end - src, dst_end - dst, is_end_of_data);
 
 #define WRITE_BYTES(SRC_BYTE_COUNT) \
     { \
         int bytes_to_write = src_to_dst_remainder[SRC_BYTE_COUNT]; \
-        KSLOG_DEBUG("Writing %d bytes (%d)", bytes_to_write, SRC_BYTE_COUNT); \
+        KSLOG_DEBUG("Writing %d bytes as %d encoded chars", SRC_BYTE_COUNT, bytes_to_write); \
         if(dst + bytes_to_write > dst_end) \
         { \
-            KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
-            *src_buffer_ptr = src; \
+            KSLOG_DEBUG("Error: Need %d chars but only %d available", bytes_to_write, dst_end - dst); \
+            *src_buffer_ptr = last_src; \
             *dst_buffer_ptr = dst; \
             return SAFE64_STATUS_DESTINATION_BUFFER_FULL; \
         } \
         for(int i = bytes_to_write-1; i >= 0; i--) \
         { \
             *dst++ = alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask]; \
-            KSLOG_DEBUG("Write: Extract pos %d: %02x: %c", \
+            KSLOG_DEBUG("Write: Extract pos %02d: %02x: %c", \
                 (dst_bits_per_byte * i), \
                 (accumulator >> (dst_bits_per_byte * i)) & dst_mask, \
                 alphabet[(accumulator >> (dst_bits_per_byte * i)) & dst_mask]); \
         } \
     }
 
+    const unsigned char* last_src = src;
     while(src < src_end)
     {
         accumulator = (accumulator << src_bits_per_byte) | *src++;
         src_group_char_count++;
-        KSLOG_DEBUG("Accumulate %02x. Total = %x, count %d", src[-1], accumulator, src_group_char_count);
+        KSLOG_DEBUG("Accumulate #%d (%02x). Value = %x", src_group_char_count, src[-1], accumulator);
         if(src_group_char_count >= src_chars_per_group)
         {
             WRITE_BYTES(src_group_char_count);
             src_group_char_count = 0;
             accumulator = 0;
+            last_src = src;
         }
     }
 
@@ -293,9 +299,10 @@ safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
         {
             src -= src_group_char_count;
         }
+        last_src = src;
     }
 
-    *src_buffer_ptr = src;
+    *src_buffer_ptr = last_src;
     *dst_buffer_ptr = dst;
 
     return SAFE64_STATUS_OK;
