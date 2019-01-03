@@ -5,20 +5,28 @@ Safe32 provides a binary data encoding scheme that is safe to be input by humans
 
 It is especially useful for things requiring human input such as activation codes.
 
-
 ### Features:
 
- * Easily confusable characters & digits are interchangeable.
- * Uppercase and lowercase characters are interchangeable.
- * No padding characters
- * No escaping necessary
  * Safe for use in URLs
  * Safe for use in filenames
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
- * Liberal whitespace rules
- * Sortable in generic text sorting algorithms (such as file listings)
+ * Support for length fields
+ * Useful for human input situations such as activation codes.
+ * Easily confusable characters & digits are interchangeable.
+ * Uppercase and lowercase characters are interchangeable.
  * Alternate form with prefixed length
+
+### Advantages over base32:
+
+ * Smaller alphabet
+ * No padding characters
+ * No escaping necessary
+ * Liberal whitespace rules
+ * Safe for use in filenames
+ * No proliferation of incompatible offshoots
+ * Better end-of-field and truncation detection
+ * Sortable in generic text sorting algorithms (such as file listings)
 
 
 Encoding
