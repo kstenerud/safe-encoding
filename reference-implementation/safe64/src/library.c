@@ -55,10 +55,10 @@ static const char g_decode_alphabet[] =
 
 static const char g_encode_alphabet[] =
 {
-    '-', '0', '1', '2', '3', '4', '5', '6', 
-    '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 
-    'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 
+    '-', '0', '1', '2', '3', '4', '5', '6',
+    '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+    'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
     'V', 'W', 'X', 'Y', 'Z', '_', 'a', 'b',
     'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
     'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -143,7 +143,7 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
             KSLOG_DEBUG("Error: Need %d bytes but only %d available", bytes_to_write, dst_end - dst); \
             *src_buffer_ptr = last_src; \
             *dst_buffer_ptr = dst; \
-            return SAFE64_STATUS_DESTINATION_BUFFER_FULL; \
+            return SAFE64_STATUS_NOT_ENOUGH_ROOM; \
         } \
         for(int i = bytes_to_write-1; i >= 0; i--) \
         { \
@@ -259,7 +259,7 @@ safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
             KSLOG_DEBUG("Error: Need %d chars but only %d available", bytes_to_write, dst_end - dst); \
             *src_buffer_ptr = last_src; \
             *dst_buffer_ptr = dst; \
-            return SAFE64_STATUS_DESTINATION_BUFFER_FULL; \
+            return SAFE64_STATUS_NOT_ENOUGH_ROOM; \
         } \
         for(int i = bytes_to_write-1; i >= 0; i--) \
         { \
@@ -322,4 +322,79 @@ int64_t safe64_encode(const unsigned char* src_buffer,
         return result;
     }
     return dst - dst_buffer;
+}
+
+int64_t safe64_write_length_field(uint64_t length, char* dst_buffer, int64_t dst_buffer_length)
+{
+    const int bits_per_chunk = ENCODED_BITS_PER_BYTE - 1;
+    const int continuation_bit = 1 << bits_per_chunk;
+    const int chunk_mask = continuation_bit - 1;
+    KSLOG_DEBUG("bits %d, continue %02x, mask %02x", bits_per_chunk, continuation_bit, chunk_mask);
+
+    int chunk_count = 0;
+    for(uint64_t i = length; i; i >>= bits_per_chunk, chunk_count++)
+    {
+    }
+    if(chunk_count == 0)
+    {
+        chunk_count = 1;
+    }
+    KSLOG_DEBUG("Value: %lu, chunk count %d", length, chunk_count);
+
+    if(chunk_count > dst_buffer_length)
+    {
+        KSLOG_DEBUG("Error: Require %d bytes but only %d available", chunk_count, dst_buffer_length);
+        return SAFE64_STATUS_NOT_ENOUGH_ROOM;
+    }
+
+    char* dst = dst_buffer;
+    for(int i = chunk_count-1; i >= 0; i--)
+    {
+        int should_continue = (i == 0) ? 0 : continuation_bit;
+        int code = ((length>>(bits_per_chunk*i)) & chunk_mask) + should_continue;
+        *dst++ = g_encode_alphabet[code];
+        KSLOG_DEBUG("Chunk %d: '%c' (%d), continue %d",
+            i,
+            dst[-1],
+            ((length>>(bits_per_chunk*i)) & chunk_mask),
+            should_continue
+            );
+    }
+    return chunk_count;
+}
+
+safe64_status_code safe64_read_length_field(const char* buffer, int64_t buffer_length, uint64_t* length)
+{
+    const int bits_per_chunk = ENCODED_BITS_PER_BYTE - 1;
+    const int continuation_bit = 1 << bits_per_chunk;
+    const int chunk_mask = continuation_bit - 1;
+    KSLOG_DEBUG("bits %d, continue %02x, mask %02x", bits_per_chunk, continuation_bit, chunk_mask);
+
+    const char* buffer_end = buffer + buffer_length;
+    uint64_t value = 0;
+    int decoded;
+
+    for(const char* src = buffer; src < buffer_end; src++)
+    {
+        decoded = g_decode_alphabet[(int)*src];
+        value = (value << bits_per_chunk) | (decoded & chunk_mask);
+        KSLOG_DEBUG("Chunk %d: '%c' (%d), continue %d, value portion = %d",
+            src - buffer,
+            *src,
+            decoded,
+            decoded & continuation_bit,
+            (decoded & chunk_mask)
+            );
+        if(!(decoded & continuation_bit))
+        {
+            break;
+        }
+    }
+    if(decoded & continuation_bit)
+    {
+        KSLOG_DEBUG("Error: Unterminated length field");
+        return SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD;
+    }
+    *length = value;
+    return SAFE64_STATUS_OK;
 }

@@ -19,7 +19,7 @@ typedef enum
      * in src_buffer_ptr, and a pointer to one past the last byte written in
      * dst_buffer_ptr.
      */
-    SAFE64_STATUS_DESTINATION_BUFFER_FULL = -1,
+    SAFE64_STATUS_NOT_ENOUGH_ROOM = -1,
 
     /**
      * The source data contained an invalid character. Processing cannot
@@ -29,6 +29,8 @@ typedef enum
      * dst_buffer_ptr.
      */
     SAFE64_ERROR_INVALID_SOURCE_DATA = -2,
+
+    SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD = -3,
 } safe64_status_code;
 
 /**
@@ -75,7 +77,7 @@ int64_t safe64_get_decoded_length(int64_t encoded_length);
  *
  * Can return the following error codes:
  *  * SAFE64_ERROR_INVALID_SOURCE_DATA: The data was invalid.
- *  * SAFE64_STATUS_DESTINATION_BUFFER_FULL: The destination buffer is full.
+ *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer is full.
  *
  * @param src_buffer_ptr Pointer to your source buffer pointer (input/output).
  * @param src_buffer_end The end of the source buffer.
@@ -96,18 +98,18 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
  *
  * Can return the following error codes:
  *  * SAFE64_ERROR_INVALID_SOURCE_DATA: The data was invalid.
- *  * SAFE64_STATUS_DESTINATION_BUFFER_FULL: The destination buffer was not big enough.
+ *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *
  * @param src_buffer The buffer containing the complete safe64 sequence.
- * @param src_length The length in bytes of the sequence.
+ * @param src_buffer_length The length in bytes of the sequence.
  * @param dst_buffer A buffer to store the decoded data.
- * @param dst_length The lenfth of the destination buffer.
+ * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
 int64_t safe64_decode(const char* src_buffer,
-                      int64_t src_length,
+                      int64_t src_buffer_length,
                       unsigned char* dst_buffer,
-                      int64_t dst_length);
+                      int64_t dst_buffer_length);
 
 /**
  * Estimate the number of bytes required to encode some binary data.
@@ -136,7 +138,7 @@ int64_t safe64_get_encoded_length(int64_t decoded_length);
  *   dst_buffer_ptr will point to one past the last byte written.
  *
  * Can return the following error codes:
- *  * SAFE64_STATUS_DESTINATION_BUFFER_FULL: The destination buffer is full.
+ *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer is full.
  *
  * @param src_buffer_ptr Pointer to your source buffer pointer (input/output).
  * @param src_buffer_end The end of the source buffer.
@@ -156,19 +158,44 @@ safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
  * It is expected that src_buffer points to the COMPLETE data.
  *
  * Can return the following error codes:
- *  * SAFE64_STATUS_DESTINATION_BUFFER_FULL: The destination buffer was not big enough.
+ *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *
  * @param src_buffer The buffer containing the complete binary data.
- * @param src_length The length in bytes of the sequence.
+ * @param src_buffer_length The length in bytes of the sequence.
  * @param dst_buffer A buffer to store the decoded data.
- * @param dst_length The lenfth of the destination buffer.
+ * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
 int64_t safe64_encode(const unsigned char* src_buffer,
-                      int64_t src_length,
+                      int64_t src_buffer_length,
                       char* dst_buffer,
-                      int64_t dst_length);
+                      int64_t dst_buffer_length);
 
+/**
+ * Write a length field to a buffer.
+ *
+ * Can return the following error codes:
+ *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *
+ * @param length The length value to write.
+ * @param dst_buffer Where to write the length field.
+ * @param dst_buffer_length Length of the destination buffer.
+ * @return The number of bytes written, or an error code.
+ */
+int64_t safe64_write_length_field(uint64_t length, char* dst_buffer, int64_t dst_buffer_length);
+
+/**
+ * Read a length field from a buffer.
+ *
+ * Can return the following error codes:
+ *  * SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD: The length field doesn't have a continuation bit of 0
+ *
+ * @param buffer Where to read the length field from.
+ * @param buffer_length Length of the buffer.
+ * @param length Pointer to where the length falue should be stored.
+ * @return SAFE64_STATUS_OK, or an error code.
+ */
+safe64_status_code safe64_read_length_field(const char* buffer, int64_t buffer_length, uint64_t* length);
 
 #ifdef __cplusplus 
 }

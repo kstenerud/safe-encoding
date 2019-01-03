@@ -128,7 +128,7 @@ void assert_chunked_encode_dst_packeted(int length)
                                         &e_dst,
                                         e_dst + packet_size,
                                         is_end);
-            ASSERT_TRUE(status == SAFE64_STATUS_OK || status == SAFE64_STATUS_DESTINATION_BUFFER_FULL);
+            ASSERT_TRUE(status == SAFE64_STATUS_OK || status == SAFE64_STATUS_NOT_ENOUGH_ROOM);
             status = safe64_decode_feed(&d_src,
                                         e_dst,
                                         &d_dst,
@@ -172,7 +172,7 @@ void assert_chunked_decode_dst_packeted(int length)
                                         &d_dst,
                                         d_dst_end,
                                         is_end);
-            ASSERT_TRUE(status == SAFE64_STATUS_OK || status == SAFE64_STATUS_DESTINATION_BUFFER_FULL);
+            ASSERT_TRUE(status == SAFE64_STATUS_OK || status == SAFE64_STATUS_NOT_ENOUGH_ROOM);
         }
         ASSERT_EQ(data, decode_buffer);
     }
@@ -202,6 +202,48 @@ void assert_decode_status(int buffer_size, std::string encoded, int expected_sta
     ASSERT_EQ(expected_status_code, actual_status_code);
 }
 
+void assert_encode_length(uint64_t length, std::string expected_encoded)
+{
+    std::vector<char> encode_buffer(100);
+    int64_t bytes_written = safe64_write_length_field(length, encode_buffer.data(), encode_buffer.size());
+    ASSERT_GT(bytes_written, 0);
+    std::string actual_encoded(encode_buffer.begin(), encode_buffer.begin() + bytes_written);
+    ASSERT_EQ(expected_encoded, actual_encoded);
+}
+
+void assert_encode_decode_length(uint64_t start_length, uint64_t end_length)
+{
+    for(__int128 i = start_length; i <= end_length; i++)
+    {
+        uint64_t length = (uint64_t)i;
+        std::vector<char> encode_buffer(100);
+        int64_t bytes_written = safe64_write_length_field(length, encode_buffer.data(), encode_buffer.size());
+        ASSERT_GT(bytes_written, 0);
+        uint64_t actual_length = 0;
+        safe64_status_code status = safe64_read_length_field(encode_buffer.data(), bytes_written, &actual_length);
+        ASSERT_EQ(SAFE64_STATUS_OK, status);
+        ASSERT_EQ(length, actual_length);
+    }
+}
+
+void assert_encode_length_status(uint64_t length, int buffer_size, int64_t expected_status)
+{
+    std::vector<char> encode_buffer(buffer_size);
+    int64_t actual_status = safe64_write_length_field(length, encode_buffer.data(), encode_buffer.size());
+    ASSERT_EQ(expected_status, actual_status);
+}
+
+void assert_decode_length(std::string encoded, uint64_t expected_length, safe64_status_code expected_status)
+{
+    uint64_t actual_length;
+    safe64_status_code actual_status = safe64_read_length_field(encoded.data(), encoded.size(), &actual_length);
+    ASSERT_EQ(expected_status, actual_status);
+    if(expected_status == SAFE64_STATUS_OK)
+    {
+        ASSERT_EQ(expected_length, actual_length);
+    }
+}
+
 
 
 // --------------------
@@ -216,6 +258,18 @@ TEST(EncodeDecode, NAME) { assert_encode_decode(ENCODED, __VA_ARGS__); }
 
 #define TEST_DECODE_ERROR(NAME, BUFFER_SIZE, ENCODED, EXPECTED_STATUS_CODE) \
 TEST(DecodeError, NAME) { assert_decode_status(BUFFER_SIZE, ENCODED, EXPECTED_STATUS_CODE); }
+
+#define TEST_ENCODE_LENGTH(NAME, LENGTH, ENCODED) \
+TEST(EncodeLength, NAME) { assert_encode_length(LENGTH, ENCODED); }
+
+#define TEST_ENCODE_LENGTH_STATUS(NAME, LENGTH, BUFFER_SIZE, STATUS) \
+TEST(EncodeLengthStatus, NAME) { assert_encode_length_status(LENGTH, BUFFER_SIZE, STATUS); }
+
+#define TEST_DECODE_LENGTH(NAME, ENCODED, EXPECTED_LENGTH, EXPECTED_STATUS) \
+TEST(DecodeLength, NAME) { assert_decode_length(ENCODED, EXPECTED_LENGTH, EXPECTED_STATUS); }
+
+#define TEST_ENCODE_DECODE_LENGTH(NAME, START_LENGTH, END_LENGTH) \
+TEST(EncodeDecodeLength, NAME) { assert_encode_decode_length(START_LENGTH, END_LENGTH); }
 
 
 
@@ -236,10 +290,10 @@ TEST_ENCODE_DECODE(_3_bytes, "wYGL",    {0xf2, 0x34, 0x56})
 TEST_ENCODE_DECODE(_4_bytes, "HcXwoF",  {0x4a, 0x88, 0xbc, 0xd1})
 TEST_ENCODE_DECODE(_5_bytes, "zr6SDd7", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "zr6SDd7", SAFE64_STATUS_DESTINATION_BUFFER_FULL)
-TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "zr6SDd7", SAFE64_STATUS_DESTINATION_BUFFER_FULL)
-TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "zr6SDd7", SAFE64_STATUS_DESTINATION_BUFFER_FULL)
-TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "zr6SDd7", SAFE64_STATUS_DESTINATION_BUFFER_FULL)
+TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "zr6SDd7", SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "zr6SDd7", SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "zr6SDd7", SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "zr6SDd7", SAFE64_STATUS_NOT_ENOUGH_ROOM)
 
 TEST_DECODE_ERROR(invalid_0, 100, ".r6SDd7", SAFE64_ERROR_INVALID_SOURCE_DATA)
 TEST_DECODE_ERROR(invalid_1, 100, "z.6SDd7", SAFE64_ERROR_INVALID_SOURCE_DATA)
@@ -284,3 +338,34 @@ TEST(Packetized, decode_dst_packeted)
     assert_chunked_decode_dst_packeted(20);
     assert_chunked_decode_dst_packeted(250);
 }
+
+TEST_ENCODE_LENGTH(_0, 0, "-")
+TEST_ENCODE_LENGTH(_1, 1, "0")
+TEST_ENCODE_LENGTH(_10, 10, "9")
+TEST_ENCODE_LENGTH(_31, 31, "U")
+TEST_ENCODE_LENGTH(_32, 32, "W-")
+TEST_ENCODE_LENGTH(_33, 33, "W0")
+TEST_ENCODE_LENGTH(_1023, 1023, "zU")
+TEST_ENCODE_LENGTH(_1024, 1024, "WV-")
+TEST_ENCODE_LENGTH(_1025, 1025, "WV0")
+TEST_ENCODE_LENGTH(_32767, 32767, "zzU")
+TEST_ENCODE_LENGTH(_32768, 32768, "WVV-")
+TEST_ENCODE_LENGTH(_32769, 32769, "WVV0")
+TEST_ENCODE_LENGTH(_1048575, 1048575, "zzzU")
+TEST_ENCODE_LENGTH(_1048576, 1048576, "WVVV-")
+TEST_ENCODE_LENGTH(_1048577, 1048577, "WVVV0")
+
+TEST_ENCODE_DECODE_LENGTH(_0_2000, 0, 2000)
+TEST_ENCODE_DECODE_LENGTH(_32000_33000, 32000, 33000)
+
+TEST_ENCODE_LENGTH_STATUS(_1_length_0,   1, 0, SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_ENCODE_LENGTH_STATUS(_1_length_1,   1, 1, 1)
+TEST_ENCODE_LENGTH_STATUS(_32_length_1, 32, 1, SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_ENCODE_LENGTH_STATUS(_32_length_2, 32, 2, 2)
+
+TEST_DECODE_LENGTH(_0,        "-",      0, SAFE64_STATUS_OK)
+TEST_DECODE_LENGTH(_31,       "U",     31, SAFE64_STATUS_OK)
+TEST_DECODE_LENGTH(_32_bad,   "W",     32, SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD)
+TEST_DECODE_LENGTH(_32,       "W-",    32, SAFE64_STATUS_OK)
+TEST_DECODE_LENGTH(_1024_bad, "WV",  1024, SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD)
+TEST_DECODE_LENGTH(_1024,     "WV-", 1024, SAFE64_STATUS_OK)
