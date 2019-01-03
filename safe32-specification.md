@@ -103,7 +103,7 @@ For the purposes of this spec, only the following characters qualify as whitespa
 
 Note: Dash is included as "whitespace" to allow human input sequences such as:
 
-    ah4f-22um-8221-4az1
+    85a9-6sd2-88ds-qfbd
 
 
 Termination
