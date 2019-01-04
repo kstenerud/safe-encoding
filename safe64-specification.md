@@ -200,7 +200,8 @@ Advantages over base64 padding
 Version History
 ---------------
 
-January 1, 2019: Preview Version 1
+ * January 4, 2019: Version 1
+ * January 1, 2019: Preview Version 1
 
 
 
