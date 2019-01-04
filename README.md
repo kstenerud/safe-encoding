@@ -44,6 +44,12 @@ Specifications
 
 
 
+Overall Specifications List
+---------------------------
+
+[https://github.com/kstenerud/specifications](https://github.com/kstenerud/specifications)
+
+
 License
 -------
 
