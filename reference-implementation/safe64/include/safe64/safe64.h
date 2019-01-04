@@ -44,6 +44,12 @@ typedef enum
      * length field.
      */
     SAFE64_ERROR_TRUNCATED_DATA = -4,
+
+    /**
+     * An invalid length value was detected.
+     * This happens if the length is negative.
+     */
+    SAFE64_ERROR_INVALID_LENGTH = -5,
 } safe64_status_code;
 
 
@@ -65,6 +71,9 @@ const char* safe64_version();
  * off, it is only an estimate, but it is guaranteed to be AT LEAST big enough
  * to store the decoded data.
  *
+ * Can return the following error codes:
+ *  * SAFE64_ERROR_INVALID_LENGTH: The length was negative.
+ *
  * @param encoded_length The length of the encoded safe64 sequence.
  * @return The length of the corresponding decoded safe64 sequence.
  */
@@ -77,6 +86,7 @@ int64_t safe64_get_decoded_length(int64_t encoded_length);
  * Can return the following error codes:
  *  * SAFE64_ERROR_INVALID_SOURCE_DATA: The data was invalid.
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer The buffer containing the complete safe64 sequence.
  * @param src_buffer_length The length in bytes of the sequence.
@@ -98,6 +108,7 @@ int64_t safe64_decode(const char* src_buffer,
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *  * SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD: The length field is truncated.
  *  * SAFE64_ERROR_TRUNCATED_DATA: The source data is truncated.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer The buffer containing the complete safe64 sequence.
  * @param src_buffer_length The length in bytes of the sequence.
@@ -113,6 +124,9 @@ int64_t safe64l_decode(const char* src_buffer,
 /**
  * Estimate the number of bytes required to encode some binary data.
  *
+ * Can return the following error codes:
+ *  * SAFE64_ERROR_INVALID_LENGTH: The length was negative.
+ *
  * @param decoded_length The length of the original data.
  * @param include_length_field If true, include the length field into the calculation.
  * @return The number of bytes required to encode the data.
@@ -125,6 +139,7 @@ int64_t safe64_get_encoded_length(int64_t decoded_length, bool include_length_fi
  *
  * Can return the following error codes:
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer The buffer containing the complete binary data.
  * @param src_buffer_length The length in bytes of the sequence.
@@ -143,6 +158,7 @@ int64_t safe64_encode(const unsigned char* src_buffer,
  *
  * Can return the following error codes:
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer The buffer containing the complete binary data.
  * @param src_buffer_length The length in bytes of the sequence.
@@ -166,6 +182,7 @@ int64_t safe64l_encode(const unsigned char* src_buffer,
  *
  * Can return the following error codes:
  *  * SAFE64_ERROR_UNTERMINATED_LENGTH_FIELD: The length field is truncated.
+ *  * SAFE64_ERROR_INVALID_LENGTH: The buffer length was negative.
  *
  * @param buffer Where to read the length field from.
  * @param buffer_length Length of the buffer.
@@ -195,6 +212,7 @@ int64_t safe64_read_length_field(const char* buffer, int64_t buffer_length, uint
  * Can return the following error codes:
  *  * SAFE64_ERROR_INVALID_SOURCE_DATA: The data was invalid.
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer is full.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer_ptr Pointer to your source buffer pointer (input/output).
  * @param src_length Length of the source buffer.
@@ -214,6 +232,7 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
  *
  * Can return the following error codes:
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param length The length value to write.
  * @param dst_buffer Where to write the length field.
@@ -242,6 +261,7 @@ int64_t safe64_write_length_field(uint64_t length, char* dst_buffer, int64_t dst
  *
  * Can return the following error codes:
  *  * SAFE64_STATUS_NOT_ENOUGH_ROOM: The destination buffer is full.
+ *  * SAFE64_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer_ptr Pointer to your source buffer pointer (input/output).
  * @param src_length Length of the source buffer.

@@ -123,6 +123,10 @@ const char* safe64_version()
 
 int64_t safe64_get_decoded_length(const int64_t encoded_length)
 {
+    if(encoded_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     int64_t groups = encoded_length / ENCODED_BYTES_PER_GROUP;
     int remainder = g_encoded_remainder_to_decoded_remainder[encoded_length % ENCODED_BYTES_PER_GROUP];
     KSLOG_DEBUG("Encoded Length %d, groups %d, mod %d, remainder %d, result %d",
@@ -140,6 +144,10 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
                                       int64_t dst_length,
                                       bool is_end_of_data)
 {
+    if(src_length < 0 || dst_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     int64_t accumulator = 0;
     int src_group_char_count = 0;
     const char* src = *src_buffer_ptr;
@@ -230,6 +238,10 @@ safe64_status_code safe64_decode_feed(const char** src_buffer_ptr,
 
 int64_t safe64_read_length_field(const char* buffer, int64_t buffer_length, uint64_t* length)
 {
+    if(buffer_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     const int bits_per_chunk = ENCODED_BITS_PER_BYTE - 1;
     const int continuation_bit = 1 << bits_per_chunk;
     const int chunk_mask = continuation_bit - 1;
@@ -272,6 +284,10 @@ int64_t safe64_decode(const char* src_buffer,
                       unsigned char* dst_buffer,
                       int64_t dst_length)
 {
+    if(src_length < 0 || dst_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     const char* src = src_buffer;
     unsigned char* dst = dst_buffer;
     int64_t result = safe64_decode_feed(&src, src_length, &dst, dst_length, true);
@@ -287,6 +303,10 @@ int64_t safe64l_decode(const char* src_buffer,
                        unsigned char* dst_buffer,
                        int64_t dst_length)
 {
+    if(src_length < 0 || dst_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     uint64_t length = 0;
     int64_t bytes_used = safe64_read_length_field(src_buffer, src_length, &length);
     if(bytes_used < 0)
@@ -312,6 +332,10 @@ int64_t safe64l_decode(const char* src_buffer,
 
 int64_t safe64_get_encoded_length(const int64_t decoded_length, bool include_length_field)
 {
+    if(decoded_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     int64_t groups = decoded_length / DECODED_BYTES_PER_GROUP;
     int remainder = g_decoded_remainder_to_encoded_remainder[decoded_length % DECODED_BYTES_PER_GROUP];
     int length_length = 0;
@@ -335,6 +359,10 @@ safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
                                       int64_t dst_length,
                                       bool is_end_of_data)
 {
+    if(src_length < 0 || dst_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     int64_t accumulator = 0;
     int src_group_char_count = 0;
     const unsigned char* src = *src_buffer_ptr;
@@ -413,6 +441,10 @@ safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
 
 int64_t safe64_write_length_field(uint64_t length, char* dst_buffer, int64_t dst_buffer_length)
 {
+    if(dst_buffer_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     const int bits_per_chunk = ENCODED_BITS_PER_BYTE - 1;
     const int continuation_bit = 1 << bits_per_chunk;
     const int chunk_mask = continuation_bit - 1;
@@ -455,6 +487,10 @@ int64_t safe64_encode(const unsigned char* src_buffer,
                       char* dst_buffer,
                       int64_t dst_length)
 {
+    if(src_length < 0 || dst_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     const unsigned char* src = src_buffer;
     char* dst = dst_buffer;
     int64_t result = safe64_encode_feed(&src, src_length, &dst, dst_length, true);
@@ -470,6 +506,10 @@ int64_t safe64l_encode(const unsigned char* src_buffer,
                        char* dst_buffer,
                        int64_t dst_length)
 {
+    if(src_length < 0 || dst_length < 0)
+    {
+        return SAFE64_ERROR_INVALID_LENGTH;
+    }
     int64_t bytes_used = safe64_write_length_field(src_length, dst_buffer, dst_length);
     if(bytes_used < 0)
     {

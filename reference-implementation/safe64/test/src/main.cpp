@@ -415,6 +415,43 @@ TEST_DECODE_LENGTH(_1024,     "WV-", 1024, 3)
 
 TEST_DECODE_WITH_LENGTH_STATUS(_x, "W07Mg0aIvGUIwWXn_BNw577R57aM5abzW4_i50DPrB_bbN", 15, SAFE64_ERROR_TRUNCATED_DATA)
 
+TEST(Length, invalid)
+{
+    std::vector<char> signed_data(100);
+    std::vector<unsigned char> unsigned_data(100);
+
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_get_decoded_length(-1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_decode(signed_data.data(), -1, unsigned_data.data(), 1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_decode(signed_data.data(), 1, unsigned_data.data(), -1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64l_decode(signed_data.data(), -1, unsigned_data.data(), 1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64l_decode(signed_data.data(), 1, unsigned_data.data(), -1));
+
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_get_encoded_length(-1, false));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_get_encoded_length(-1, true));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_encode(unsigned_data.data(), -1, signed_data.data(), 1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_encode(unsigned_data.data(), 1, signed_data.data(), -1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64l_encode(unsigned_data.data(), -1, signed_data.data(), 1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64l_encode(unsigned_data.data(), 1, signed_data.data(), -1));
+
+    uint64_t length = 0;
+    char* signed_ptr = signed_data.data();
+    const char* const_signed_ptr = signed_data.data();
+    unsigned char* unsigned_ptr = unsigned_data.data();
+    const unsigned char* const_unsigned_ptr = unsigned_data.data();
+
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_read_length_field(signed_data.data(), -1, &length));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_decode_feed(&const_signed_ptr, -1, &unsigned_ptr, 1, false));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_decode_feed(&const_signed_ptr, 1, &unsigned_ptr, -1, false));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_decode_feed(&const_signed_ptr, -1, &unsigned_ptr, 1, true));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_decode_feed(&const_signed_ptr, 1, &unsigned_ptr, -1, true));
+
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_write_length_field(1, signed_data.data(), -1));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_encode_feed(&const_unsigned_ptr, -1, &signed_ptr, 1, false));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_encode_feed(&const_unsigned_ptr, 1, &signed_ptr, -1, false));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_encode_feed(&const_unsigned_ptr, -1, &signed_ptr, 1, true));
+    ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64_encode_feed(&const_unsigned_ptr, 1, &signed_ptr, -1, true));
+}
+
 
 // Specification Examples:
 
