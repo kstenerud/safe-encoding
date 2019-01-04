@@ -89,7 +89,7 @@ An encoded stream may contain whitespace as needed by the medium it will be tran
 
 For human input, it may be helpful to break up long sequences into shorter chunks using whitespace to make the sequence easier to input without losing your place.
 
-It is up to the encoder or human to decide when and how whitespace will occur. A decoder must accept and discard all whitespace characters while processing the stream.
+It is up to the encoder or human to decide when and how whitespace will occur. Whitespace may occur at any point in the data stream. A decoder must accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 

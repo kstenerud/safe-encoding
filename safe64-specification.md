@@ -66,7 +66,7 @@ The alphabet is ordered according to the characters' ordinal positions in UTF-8,
 Whitespace
 ----------
 
-An encoded stream may contain whitespace as needed by the medium it will be transferred across. For example, some mediums may have a maximum line length, or require indentation. It is up to the encoder to decide when and how whitespace will occur. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream may contain whitespace as needed by the medium it will be transferred across. For example, some mediums may have a maximum line length, or require indentation. It is up to the encoder to decide when and how whitespace will occur. Whitespace may occur at any point in the data stream. A decoder must accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
