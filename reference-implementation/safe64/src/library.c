@@ -6,10 +6,10 @@
 
 #define DECODED_BYTES_PER_GROUP 3
 #define ENCODED_CHARS_PER_GROUP 4
-#define ENCODED_BITS_PER_BYTE 6
-#define DECODED_BITS_PER_BYTE 8
+#define ENCODED_BITS_PER_BYTE   6
+#define DECODED_BITS_PER_BYTE   8
 
-#define CHARACTER_CODE_ERROR 0x7f
+#define CHARACTER_CODE_ERROR      0x7f
 #define CHARACTER_CODE_WHITESPACE 0x7e
 
 static const uint8_t g_encode_char_to_decode_value[] =
@@ -73,7 +73,14 @@ static const int g_decode_to_encode_size[]       = { 0, 2, 3, 4 };
 static const int g_decoded_size_to_bit_padding[] = { 0, 4, 2, 0 };
 
 
-static int calculate_length_chunk_count(int64_t length)
+// ===========================================================================
+// Code below this point is the same in all safeXX codecs (with a different
+// function name prefix).
+// After changing anything below this point, please copy the changes to all
+// other codecs.
+// ===========================================================================
+
+static inline int calculate_length_chunk_count(int64_t length)
 {
     const int bits_per_chunk = ENCODED_BITS_PER_BYTE - 1;
 
@@ -347,7 +354,8 @@ int64_t safe64l_decode(const uint8_t* const enc_buffer,
     return dec - dec_buffer;
 }
 
-int64_t safe64_get_encoded_length(const int64_t decoded_length, const bool include_length_field)
+int64_t safe64_get_encoded_length(const int64_t decoded_length,
+                                  const bool include_length_field)
 {
     if(decoded_length < 0)
     {
@@ -381,9 +389,9 @@ safe64_status safe64_encode_feed(const uint8_t** const dec_buffer_ptr,
 
     const uint8_t* const dec_end = dec + dec_length;
     const uint8_t* const enc_end = enc + enc_length;
+    const int dec_chars_per_group = DECODED_BYTES_PER_GROUP;
     const int dec_bits_per_byte = DECODED_BITS_PER_BYTE;
     const int enc_bits_per_byte = ENCODED_BITS_PER_BYTE;
-    const int dec_chars_per_group = DECODED_BYTES_PER_GROUP;
     const int enc_mask = (1 << ENCODED_BITS_PER_BYTE) - 1;
 
     KSLOG_DEBUG("Encode %d bytes into %d encoded chars, ending %d",
