@@ -202,7 +202,7 @@ safe64_status safe64_decode_feed(const uint8_t** const enc_buffer_ptr,
     KSLOG_DEBUG("Enc at end %d, dec at end %d", enc_is_at_end, dec_is_at_end);
     if(enc_is_at_end || dec_is_at_end)
     {
-        if(stream_state & SAFE64_DST_CONTROLS_END_OF_STREAM)
+        if(stream_state & SAFE64_EXPECT_DST_STREAM_TO_END)
         {
             if(dec_is_at_end)
             {
@@ -297,6 +297,10 @@ int64_t safe64_decode(const uint8_t* const enc_buffer,
                                     SAFE64_SRC_IS_AT_END_OF_STREAM | SAFE64_DST_IS_AT_END_OF_STREAM);
     if(status != SAFE64_STATUS_OK)
     {
+        if(status == SAFE64_STATUS_PARTIALLY_COMPLETE)
+        {
+            return SAFE64_ERROR_NOT_ENOUGH_ROOM;
+        }
         return status;
     }
     return dec - dec_buffer;
@@ -334,6 +338,10 @@ int64_t safe64l_decode(const uint8_t* const enc_buffer,
                                     SAFE64_SRC_IS_AT_END_OF_STREAM | SAFE64_DST_IS_AT_END_OF_STREAM);
     if(status != SAFE64_STATUS_OK)
     {
+        if(status == SAFE64_STATUS_PARTIALLY_COMPLETE)
+        {
+            return SAFE64_ERROR_NOT_ENOUGH_ROOM;
+        }
         return status;
     }
     return dec - dec_buffer;
@@ -390,7 +398,7 @@ safe64_status safe64_encode_feed(const uint8_t** const dec_buffer_ptr,
             KSLOG_DEBUG("Error: Need %d chars but only %d available", bytes_to_write, enc_end - enc); \
             *dec_buffer_ptr = last_dec; \
             *enc_buffer_ptr = enc; \
-            return SAFE64_STATUS_NOT_ENOUGH_ROOM; \
+            return SAFE64_STATUS_PARTIALLY_COMPLETE; \
         } \
         for(int shift_amount = bytes_to_write - 1; shift_amount >= 0; shift_amount--) \
         { \
@@ -470,7 +478,7 @@ int64_t safe64_write_length_field(const uint64_t length,
     if(chunk_count > enc_buffer_length)
     {
         KSLOG_DEBUG("Error: Require %d bytes but only %d available", chunk_count, enc_buffer_length);
-        return SAFE64_STATUS_NOT_ENOUGH_ROOM;
+        return SAFE64_ERROR_NOT_ENOUGH_ROOM;
     }
 
     uint8_t* enc = enc_buffer;
@@ -500,6 +508,10 @@ int64_t safe64_encode(const uint8_t* const dec_buffer,
     const safe64_status status = safe64_encode_feed(&dec, dec_length, &enc, enc_length, true);
     if(status != SAFE64_STATUS_OK)
     {
+        if(status == SAFE64_STATUS_PARTIALLY_COMPLETE)
+        {
+            return SAFE64_ERROR_NOT_ENOUGH_ROOM;
+        }
         return status;
     }
     return enc - enc_buffer;
@@ -525,6 +537,10 @@ int64_t safe64l_encode(const uint8_t* const dec_buffer,
     safe64_status status = safe64_encode_feed(&dec, dec_length, &enc, enc_length, true);
     if(status != SAFE64_STATUS_OK)
     {
+        if(status == SAFE64_STATUS_PARTIALLY_COMPLETE)
+        {
+            return SAFE64_ERROR_NOT_ENOUGH_ROOM;
+        }
         return status;
     }
     return enc - enc_buffer;

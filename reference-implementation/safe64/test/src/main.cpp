@@ -167,7 +167,7 @@ void assert_chunked_encode_dst_packeted(int length)
                                         &e_dst,
                                         packet_size,
                                         is_end);
-            ASSERT_TRUE(status == SAFE64_STATUS_OK || status == SAFE64_STATUS_NOT_ENOUGH_ROOM);
+            ASSERT_TRUE(status == SAFE64_STATUS_OK || status == SAFE64_STATUS_PARTIALLY_COMPLETE);
             status = safe64_decode_feed(&d_src,
                                         e_dst - d_src,
                                         &d_dst,
@@ -206,7 +206,7 @@ void assert_chunked_decode_dst_packeted(int length)
             if(d_src_end >= encoded_end)
             {
                 d_src_end = encoded_end;
-                stream_state = (safe64_stream_state)(SAFE64_DST_CONTROLS_END_OF_STREAM | SAFE64_DST_IS_AT_END_OF_STREAM);
+                stream_state = (safe64_stream_state)(SAFE64_EXPECT_DST_STREAM_TO_END | SAFE64_DST_IS_AT_END_OF_STREAM);
             }
             KSLOG_DEBUG("Feed %d chars into %d bytes with state %d", d_src_end - d_src, d_dst_end - d_dst, stream_state);
             status = safe64_decode_feed(&d_src,
@@ -408,9 +408,9 @@ TEST_ENCODE_LENGTH(_1048577, 1048577, "WVVV0")
 TEST_ENCODE_DECODE_LENGTH(_0_2000, 0, 2000)
 TEST_ENCODE_DECODE_LENGTH(_32000_33000, 32000, 33000)
 
-TEST_ENCODE_LENGTH_STATUS(_1_length_0,   1, 0, SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_ENCODE_LENGTH_STATUS(_1_length_0,   1, 0, SAFE64_ERROR_NOT_ENOUGH_ROOM)
 TEST_ENCODE_LENGTH_STATUS(_1_length_1,   1, 1, 1)
-TEST_ENCODE_LENGTH_STATUS(_32_length_1, 32, 1, SAFE64_STATUS_NOT_ENOUGH_ROOM)
+TEST_ENCODE_LENGTH_STATUS(_32_length_1, 32, 1, SAFE64_ERROR_NOT_ENOUGH_ROOM)
 TEST_ENCODE_LENGTH_STATUS(_32_length_2, 32, 2, 2)
 
 TEST_DECODE_LENGTH(_0,        "-",      0, 1)
