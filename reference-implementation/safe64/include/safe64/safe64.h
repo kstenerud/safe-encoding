@@ -56,7 +56,7 @@ typedef enum
     SAFE64_STATUS_PARTIALLY_COMPLETE = -7,
 
     SAFE64_ERROR_NOT_ENOUGH_ROOM = -8,
-} safe64_status_code;
+} safe64_status;
 
 /**
  * This logical ORed field allows callers to mark the end of the source and/or
@@ -114,9 +114,9 @@ int64_t safe64_get_decoded_length(int64_t encoded_length);
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe64_decode(const unsigned char* src_buffer,
+int64_t safe64_decode(const uint8_t* src_buffer,
                       int64_t src_buffer_length,
-                      unsigned char* dst_buffer,
+                      uint8_t* dst_buffer,
                       int64_t dst_buffer_length);
 
 /**
@@ -136,9 +136,9 @@ int64_t safe64_decode(const unsigned char* src_buffer,
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe64l_decode(const unsigned char* src_buffer,
+int64_t safe64l_decode(const uint8_t* src_buffer,
                        int64_t src_length,
-                       unsigned char* dst_buffer,
+                       uint8_t* dst_buffer,
                        int64_t dst_length);
 
 /**
@@ -167,9 +167,9 @@ int64_t safe64_get_encoded_length(int64_t decoded_length, bool include_length_fi
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe64_encode(const unsigned char* src_buffer,
+int64_t safe64_encode(const uint8_t* src_buffer,
                       int64_t src_buffer_length,
-                      unsigned char* dst_buffer,
+                      uint8_t* dst_buffer,
                       int64_t dst_buffer_length);
 
 /**
@@ -186,9 +186,9 @@ int64_t safe64_encode(const unsigned char* src_buffer,
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe64l_encode(const unsigned char* src_buffer,
+int64_t safe64l_encode(const uint8_t* src_buffer,
                       int64_t src_buffer_length,
-                      unsigned char* dst_buffer,
+                      uint8_t* dst_buffer,
                       int64_t dst_buffer_length);
 
 
@@ -209,7 +209,7 @@ int64_t safe64l_encode(const unsigned char* src_buffer,
  * @param length Pointer to where the length falue should be stored.
  * @return the number of bytes processed to read the length, or an error code.
  */
-int64_t safe64_read_length_field(const unsigned char* buffer, int64_t buffer_length, uint64_t* length);
+int64_t safe64_read_length_field(const uint8_t* buffer, int64_t buffer_length, uint64_t* length);
 
 /**
  * Decode part of a safe64 sequence.
@@ -241,9 +241,9 @@ int64_t safe64_read_length_field(const unsigned char* buffer, int64_t buffer_len
  * @param is_end_of_data If true, this is the last packet of data to decode.
  * @return Status code indicating the result of the operation.
  */
-safe64_status_code safe64_decode_feed(const unsigned char** enc_buffer_ptr,
+safe64_status safe64_decode_feed(const uint8_t** enc_buffer_ptr,
                                       int64_t enc_length,
-                                      unsigned char** dec_buffer_ptr,
+                                      uint8_t** dec_buffer_ptr,
                                       int64_t dec_length,
                                       safe64_stream_state stream_state);
 
@@ -259,7 +259,7 @@ safe64_status_code safe64_decode_feed(const unsigned char** enc_buffer_ptr,
  * @param dst_buffer_length Length of the destination buffer.
  * @return The number of bytes written, or an error code.
  */
-int64_t safe64_write_length_field(uint64_t length, unsigned char* dst_buffer, int64_t dst_buffer_length);
+int64_t safe64_write_length_field(uint64_t length, uint8_t* dst_buffer, int64_t dst_buffer_length);
 
 /**
  * Encode a partial sequence of binary data.
@@ -290,9 +290,9 @@ int64_t safe64_write_length_field(uint64_t length, unsigned char* dst_buffer, in
  * @param is_end_of_data If true, this is the last packet of data to encode.
  * @return Status code indicating the result of the operation.
  */
-safe64_status_code safe64_encode_feed(const unsigned char** src_buffer_ptr,
+safe64_status safe64_encode_feed(const uint8_t** src_buffer_ptr,
                                       int64_t src_length,
-                                      unsigned char** dst_buffer_ptr,
+                                      uint8_t** dst_buffer_ptr,
                                       int64_t dst_length,
                                       bool is_end_of_data);
 
