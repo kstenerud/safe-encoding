@@ -225,12 +225,11 @@ void assert_decode(std::string expected_encoded, std::vector<uint8_t> expected_d
     int64_t decoded_length = safe64_get_decoded_length(expected_encoded.size());
     ASSERT_GE(decoded_length, 0);
     std::vector<uint8_t> decode_buffer(decoded_length);
-    int64_t expected_decode_used_bytes = expected_encoded.size();
     int64_t actual_decode_used_bytes = safe64_decode((uint8_t*)expected_encoded.data(),
                                                      expected_encoded.size(),
                                                      decode_buffer.data(),
                                                      decode_buffer.size());
-    ASSERT_GE(expected_decode_used_bytes, actual_decode_used_bytes);
+    ASSERT_GE(actual_decode_used_bytes, 1);
     std::vector<uint8_t> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
     ASSERT_EQ(expected_decoded, actual_decoded);
 }

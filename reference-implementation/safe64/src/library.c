@@ -189,8 +189,8 @@ safe64_status safe64_decode_feed(const uint8_t** const enc_buffer_ptr,
         }
     }
 
-    const bool enc_is_at_end = (stream_state & SAFE64_SRC_IS_AT_END_OF_STREAM) && enc >= enc_end;
-    const bool dec_is_at_end = (stream_state & SAFE64_DST_IS_AT_END_OF_STREAM) && dec + g_encode_to_decode_size[enc_group_char_count] >= dec_end;
+    bool enc_is_at_end = (stream_state & SAFE64_SRC_IS_AT_END_OF_STREAM) && enc >= enc_end;
+    bool dec_is_at_end = (stream_state & SAFE64_DST_IS_AT_END_OF_STREAM) && dec + g_encode_to_decode_size[enc_group_char_count] >= dec_end;
 
     if(enc_group_char_count > 0 && (enc_is_at_end || dec_is_at_end))
     {
@@ -201,8 +201,21 @@ safe64_status safe64_decode_feed(const uint8_t** const enc_buffer_ptr,
         last_enc = enc;
     }
 
+    // Skip over any trailing whitespace
+    for(; enc < enc_end; enc++)
+    {
+        if(g_encode_char_to_decode_value[*enc] != CHARACTER_CODE_WHITESPACE)
+        {
+            last_enc = enc;
+            break;
+        }
+    }
+
     *enc_buffer_ptr = last_enc;
     *dec_buffer_ptr = dec;
+
+    enc_is_at_end = (stream_state & SAFE64_SRC_IS_AT_END_OF_STREAM) && enc >= enc_end;
+    dec_is_at_end = (stream_state & SAFE64_DST_IS_AT_END_OF_STREAM) && dec + g_encode_to_decode_size[enc_group_char_count] >= dec_end;
 
     KSLOG_DEBUG("Stream state = %d, enc %d, dec %d", stream_state, enc >= enc_end, dec >= dec_end);
     KSLOG_TRACE("enc %p %p, dec %p %p", enc, enc_end, dec, dec_end);
