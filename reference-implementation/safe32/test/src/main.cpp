@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 
 #include <safe32/safe32.h>
 
-// #define KSLogger_LocalLevel DEBUG
+#define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
 
 #define DECODED_BYTES_PER_GROUP 5
@@ -22,13 +22,13 @@ int main(int argc, char **argv)
 // Assertions
 // ----------
 
-void assert_encode_decode(std::string expected_encoded, std::vector<unsigned char> expected_decoded)
+void assert_encode_decode(std::string expected_encoded, std::vector<uint8_t> expected_decoded)
 {
     int64_t expected_encoded_length = expected_encoded.size();
     int64_t actual_encoded_length = safe32_get_encoded_length(expected_decoded.size(), false);
     ASSERT_EQ(expected_encoded_length, actual_encoded_length);
 
-    std::vector<char> encode_buffer(1000);
+    std::vector<uint8_t> encode_buffer(1000);
     int64_t actual_encode_used_bytes = safe32_encode(expected_decoded.data(),
                                                      expected_decoded.size(),
                                                      encode_buffer.data(),
@@ -42,20 +42,20 @@ void assert_encode_decode(std::string expected_encoded, std::vector<unsigned cha
     int64_t actual_decoded_length = safe32_get_decoded_length(expected_encoded.size());
     ASSERT_EQ(expected_decoded_length, actual_decoded_length);
 
-    std::vector<unsigned char> decode_buffer(1000);
+    std::vector<uint8_t> decode_buffer(1000);
     int64_t expected_decode_used_bytes = expected_decoded.size();
-    int64_t actual_decode_used_bytes = safe32_decode(expected_encoded.data(),
+    int64_t actual_decode_used_bytes = safe32_decode((uint8_t*)expected_encoded.data(),
                                                      expected_encoded.size(),
                                                      decode_buffer.data(),
                                                      decode_buffer.size());
     ASSERT_EQ(expected_decode_used_bytes, actual_decode_used_bytes);
-    std::vector<unsigned char> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
+    std::vector<uint8_t> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
     ASSERT_EQ(expected_decoded, actual_decoded);
 }
 
-void assert_encode_decode_with_length(std::string expected_encoded, std::vector<unsigned char> expected_decoded)
+void assert_encode_decode_with_length(std::string expected_encoded, std::vector<uint8_t> expected_decoded)
 {
-    std::vector<char> encode_buffer(1000);
+    std::vector<uint8_t> encode_buffer(1000);
     int64_t actual_encode_used_bytes = safe32l_encode(expected_decoded.data(),
                                                       expected_decoded.size(),
                                                       encode_buffer.data(),
@@ -64,20 +64,20 @@ void assert_encode_decode_with_length(std::string expected_encoded, std::vector<
     std::string actual_encoded(encode_buffer.begin(), encode_buffer.begin() + actual_encode_used_bytes);
     ASSERT_EQ(expected_encoded, actual_encoded);
 
-    std::vector<unsigned char> decode_buffer(1000);
-    int64_t actual_decode_used_bytes = safe32l_decode(expected_encoded.data(),
+    std::vector<uint8_t> decode_buffer(1000);
+    int64_t actual_decode_used_bytes = safe32l_decode((uint8_t*)expected_encoded.data(),
                                                       expected_encoded.size(),
                                                       decode_buffer.data(),
                                                       decode_buffer.size());
     ASSERT_GT(actual_decode_used_bytes, 0);
-    std::vector<unsigned char> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
+    std::vector<uint8_t> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
     ASSERT_EQ(expected_decoded, actual_decoded);
 }
 
 void assert_encode_decode_with_length_status(std::string expected_encoded, int64_t force_length, int64_t expected_status)
 {
-    std::vector<unsigned char> decode_buffer(1000);
-    int64_t actual_decode_used_bytes = safe32l_decode(expected_encoded.data(),
+    std::vector<uint8_t> decode_buffer(1000);
+    int64_t actual_decode_used_bytes = safe32l_decode((uint8_t*)expected_encoded.data(),
                                                       force_length,
                                                       decode_buffer.data(),
                                                       decode_buffer.size());
@@ -96,29 +96,31 @@ std::vector<uint8_t> make_bytes(int length, int start_value)
 
 void assert_chunked_encode_src_packeted(int length)
 {
-    std::vector<unsigned char> data = make_bytes(length, length);
-    std::vector<char> encode_buffer(length * 2);
-    std::vector<unsigned char> decode_buffer(length);
+    std::vector<uint8_t> data = make_bytes(length, length);
+    std::vector<uint8_t> encode_buffer(length * 2);
+    std::vector<uint8_t> decode_buffer(length);
 
     for(int packet_size=length-1; packet_size >= DECODED_BYTES_PER_GROUP; packet_size--)
     {
         KSLOG_DEBUG("packet size %d", packet_size);
-        safe32_status_code status = SAFE32_STATUS_OK;
-        const unsigned char* e_src = data.data();
-        const unsigned char* e_src_end = data.data() + data.size();
-        char* e_dst = encode_buffer.data();
-        char* e_dst_end = encode_buffer.data() + encode_buffer.size();
-        const char* d_src = encode_buffer.data();
-        unsigned char* d_dst = decode_buffer.data();
-        unsigned char* d_dst_end = decode_buffer.data() + decode_buffer.size();
+        safe32_status status = SAFE32_STATUS_OK;
+        const uint8_t* e_src = data.data();
+        const uint8_t* e_src_end = data.data() + data.size();
+        uint8_t* e_dst = (uint8_t*)encode_buffer.data();
+        uint8_t* e_dst_end = (uint8_t*)encode_buffer.data() + encode_buffer.size();
+        const uint8_t* d_src = (uint8_t*)encode_buffer.data();
+        uint8_t* d_dst = decode_buffer.data();
+        uint8_t* d_dst_end = decode_buffer.data() + decode_buffer.size();
 
         while(e_src < e_src_end)
         {
             bool is_end = false;
+            safe32_stream_state stream_state = SAFE32_STREAM_STATE_NONE;
             int encode_byte_count = packet_size;
-            if(encode_byte_count > e_src_end - e_src)
+            if(encode_byte_count >= e_src_end - e_src)
             {
                 encode_byte_count = e_src_end - e_src;
+                stream_state = SAFE32_SRC_IS_AT_END_OF_STREAM;
                 is_end = true;
             }
             status = safe32_encode_feed(&e_src,
@@ -131,107 +133,111 @@ void assert_chunked_encode_src_packeted(int length)
                                         e_dst - d_src,
                                         &d_dst,
                                         d_dst_end - d_dst,
-                                        is_end);
-            ASSERT_EQ(SAFE32_STATUS_OK, status);
+                                        stream_state);
+            ASSERT_TRUE(status == SAFE32_STATUS_OK || status == SAFE32_STATUS_PARTIALLY_COMPLETE);
         }
+        ASSERT_EQ(SAFE32_STATUS_OK, status);
         ASSERT_EQ(data, decode_buffer);
     }
 }
 
 void assert_chunked_encode_dst_packeted(int length)
 {
-    std::vector<unsigned char> data = make_bytes(length, length);
-    std::vector<char> encode_buffer(length * 2);
-    std::vector<unsigned char> decode_buffer(length);
+    std::vector<uint8_t> data = make_bytes(length, length);
+    std::vector<uint8_t> encode_buffer(length * 2);
+    std::vector<uint8_t> decode_buffer(length);
 
     for(int packet_size=length-1; packet_size >= ENCODED_BYTES_PER_GROUP; packet_size--)
     {
         KSLOG_DEBUG("packet size %d", packet_size);
-        safe32_status_code status = SAFE32_STATUS_OK;
-        const unsigned char* e_src = data.data();
-        const unsigned char* e_src_end = data.data() + data.size();
-        char* e_dst = encode_buffer.data();
-        const char* d_src = encode_buffer.data();
-        unsigned char* d_dst = decode_buffer.data();
-        unsigned char* d_dst_end = decode_buffer.data() + decode_buffer.size();
+        safe32_status status = SAFE32_STATUS_OK;
+        const uint8_t* e_src = data.data();
+        const uint8_t* e_src_end = data.data() + data.size();
+        uint8_t* e_dst = (uint8_t*)encode_buffer.data();
+        const uint8_t* d_src = (uint8_t*)encode_buffer.data();
+        uint8_t* d_dst = decode_buffer.data();
+        uint8_t* d_dst_end = decode_buffer.data() + decode_buffer.size();
 
         while(e_src < e_src_end)
         {
             bool is_end = e_src + packet_size >= e_src_end;
+            safe32_stream_state stream_state = (safe32_stream_state)(is_end ? SAFE32_SRC_IS_AT_END_OF_STREAM : SAFE32_STREAM_STATE_NONE);
             status = safe32_encode_feed(&e_src,
                                         e_src_end - e_src,
                                         &e_dst,
                                         packet_size,
                                         is_end);
-            ASSERT_TRUE(status == SAFE32_STATUS_OK || status == SAFE32_STATUS_NOT_ENOUGH_ROOM);
+            ASSERT_TRUE(status == SAFE32_STATUS_OK || status == SAFE32_STATUS_PARTIALLY_COMPLETE);
             status = safe32_decode_feed(&d_src,
                                         e_dst - d_src,
                                         &d_dst,
                                         d_dst_end - d_dst,
-                                        is_end);
-            ASSERT_EQ(SAFE32_STATUS_OK, status);
+                                        stream_state);
+            ASSERT_TRUE(status == SAFE32_STATUS_OK || status == SAFE32_STATUS_PARTIALLY_COMPLETE);
         }
+        ASSERT_EQ(SAFE32_STATUS_OK, status);
         ASSERT_EQ(data, decode_buffer);
     }
 }
 
 void assert_chunked_decode_dst_packeted(int length)
 {
-    std::vector<unsigned char> data = make_bytes(length, length);
-    std::vector<char> encode_buffer(length * 2);
-    std::vector<unsigned char> decode_buffer(length);
+    KSLOG_DEBUG("Length %d", length);
+    std::vector<uint8_t> data = make_bytes(length, length);
+    std::vector<uint8_t> encode_buffer(length * 2);
+    std::vector<uint8_t> decode_buffer(length);
     int64_t encoded_length = safe32_encode(data.data(), data.size(), encode_buffer.data(), encode_buffer.size());
     ASSERT_GT(encoded_length, 0);
-    const char* encoded_end = encode_buffer.data() + encoded_length;
+    const uint8_t* encoded_end = (uint8_t*)encode_buffer.data() + encoded_length;
 
 
     for(int packet_size=length-1; packet_size >= ENCODED_BYTES_PER_GROUP; packet_size--)
     {
         KSLOG_DEBUG("packet size %d", packet_size);
-        safe32_status_code status = SAFE32_STATUS_OK;
-        const char* d_src = encode_buffer.data();
-        unsigned char* d_dst = decode_buffer.data();
-        unsigned char* d_dst_end = decode_buffer.data() + decode_buffer.size();
+        safe32_status status = SAFE32_STATUS_OK;
+        const uint8_t* d_src = (uint8_t*)encode_buffer.data();
+        uint8_t* d_dst = decode_buffer.data();
+        uint8_t* d_dst_end = decode_buffer.data() + decode_buffer.size();
 
         while(d_src < encoded_end)
         {
-            const char* d_src_end = d_src + packet_size;
-            bool is_end = false;
+            const uint8_t* d_src_end = d_src + packet_size;
+            safe32_stream_state stream_state = SAFE32_STREAM_STATE_NONE;
             if(d_src_end >= encoded_end)
             {
                 d_src_end = encoded_end;
-                is_end = true;
+                stream_state = (safe32_stream_state)(SAFE32_EXPECT_DST_STREAM_TO_END | SAFE32_DST_IS_AT_END_OF_STREAM);
             }
+            KSLOG_DEBUG("Feed %d chars into %d bytes with state %d", d_src_end - d_src, d_dst_end - d_dst, stream_state);
             status = safe32_decode_feed(&d_src,
                                         d_src_end - d_src,
                                         &d_dst,
                                         d_dst_end - d_dst,
-                                        is_end);
-            ASSERT_TRUE(status == SAFE32_STATUS_OK || status == SAFE32_STATUS_NOT_ENOUGH_ROOM);
+                                        stream_state);
+            ASSERT_TRUE(status == SAFE32_STATUS_OK || status == SAFE32_STATUS_PARTIALLY_COMPLETE);
         }
         ASSERT_EQ(data, decode_buffer);
     }
 }
 
-void assert_decode(std::string expected_encoded, std::vector<unsigned char> expected_decoded)
+void assert_decode(std::string expected_encoded, std::vector<uint8_t> expected_decoded)
 {
     int64_t decoded_length = safe32_get_decoded_length(expected_encoded.size());
     ASSERT_GE(decoded_length, 0);
-    std::vector<unsigned char> decode_buffer(decoded_length);
-    int64_t expected_decode_used_bytes = expected_encoded.size();
-    int64_t actual_decode_used_bytes = safe32_decode(expected_encoded.data(),
+    std::vector<uint8_t> decode_buffer(decoded_length);
+    int64_t actual_decode_used_bytes = safe32_decode((uint8_t*)expected_encoded.data(),
                                                      expected_encoded.size(),
                                                      decode_buffer.data(),
                                                      decode_buffer.size());
-    ASSERT_GE(expected_decode_used_bytes, actual_decode_used_bytes);
-    std::vector<unsigned char> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
+    ASSERT_GE(actual_decode_used_bytes, 1);
+    std::vector<uint8_t> actual_decoded(decode_buffer.begin(), decode_buffer.begin() + actual_decode_used_bytes);
     ASSERT_EQ(expected_decoded, actual_decoded);
 }
 
 void assert_decode_status(int buffer_size, std::string encoded, int expected_status_code)
 {
-    std::vector<unsigned char> decode_buffer(buffer_size);
-    int64_t actual_status_code = safe32_decode(encoded.data(),
+    std::vector<uint8_t> decode_buffer(buffer_size);
+    int64_t actual_status_code = safe32_decode((uint8_t*)encoded.data(),
                                                encoded.size(),
                                                decode_buffer.data(),
                                                decode_buffer.size());
@@ -240,7 +246,7 @@ void assert_decode_status(int buffer_size, std::string encoded, int expected_sta
 
 void assert_encode_length(uint64_t length, std::string expected_encoded)
 {
-    std::vector<char> encode_buffer(100);
+    std::vector<uint8_t> encode_buffer(100);
     int64_t bytes_written = safe32_write_length_field(length, encode_buffer.data(), encode_buffer.size());
     ASSERT_GT(bytes_written, 0);
     std::string actual_encoded(encode_buffer.begin(), encode_buffer.begin() + bytes_written);
@@ -252,11 +258,11 @@ void assert_encode_decode_length(uint64_t start_length, uint64_t end_length)
     for(__int128 i = start_length; i <= end_length; i++)
     {
         uint64_t length = (uint64_t)i;
-        std::vector<char> encode_buffer(100);
+        std::vector<uint8_t> encode_buffer(100);
         int64_t bytes_written = safe32_write_length_field(length, encode_buffer.data(), encode_buffer.size());
         ASSERT_GT(bytes_written, 0);
         uint64_t actual_length = 0;
-        int64_t bytes_read = safe32_read_length_field(encode_buffer.data(), bytes_written, &actual_length);
+        int64_t bytes_read = safe32_read_length_field((uint8_t*)encode_buffer.data(), bytes_written, &actual_length);
         ASSERT_GT(bytes_read, 0);
         ASSERT_EQ(length, actual_length);
     }
@@ -264,7 +270,7 @@ void assert_encode_decode_length(uint64_t start_length, uint64_t end_length)
 
 void assert_encode_length_status(uint64_t length, int buffer_size, int64_t expected_status)
 {
-    std::vector<char> encode_buffer(buffer_size);
+    std::vector<uint8_t> encode_buffer(buffer_size);
     int64_t actual_status = safe32_write_length_field(length, encode_buffer.data(), encode_buffer.size());
     ASSERT_EQ(expected_status, actual_status);
 }
@@ -272,7 +278,7 @@ void assert_encode_length_status(uint64_t length, int buffer_size, int64_t expec
 void assert_decode_length(std::string encoded, uint64_t expected_length, int64_t expected_status)
 {
     uint64_t actual_length;
-    int64_t actual_status = safe32_read_length_field(encoded.data(), encoded.size(), &actual_length);
+    int64_t actual_status = safe32_read_length_field((uint8_t*)encoded.data(), encoded.size(), &actual_length);
     ASSERT_EQ(expected_status, actual_status);
     if(expected_status == SAFE32_STATUS_OK)
     {
@@ -337,10 +343,10 @@ TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, "4y9u6d",    {0xf2, 0x34, 0x56})
 TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, "5ab5ctn9",  {0x4a, 0x88, 0xbc, 0xd1})
 TEST_ENCODE_DECODE_WITH_LENGTH(_5_bytes, "6zxsxufnk", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "zxsxufnk", SAFE32_STATUS_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "zxsxufnk", SAFE32_STATUS_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "zxsxufnk", SAFE32_STATUS_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "zxsxufnk", SAFE32_STATUS_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "zxsxufnk", SAFE32_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "zxsxufnk", SAFE32_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "zxsxufnk", SAFE32_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "zxsxufnk", SAFE32_ERROR_NOT_ENOUGH_ROOM)
 
 TEST_DECODE_ERROR(invalid_0, 100, ".zxsxufnk", SAFE32_ERROR_INVALID_SOURCE_DATA)
 TEST_DECODE_ERROR(invalid_1, 100, "z.xsxufnk", SAFE32_ERROR_INVALID_SOURCE_DATA)
@@ -404,9 +410,9 @@ TEST_ENCODE_LENGTH(_65537, 65537, "jhhh2")
 TEST_ENCODE_DECODE_LENGTH(_0_2000, 0, 2000)
 TEST_ENCODE_DECODE_LENGTH(_32000_33000, 32000, 33000)
 
-TEST_ENCODE_LENGTH_STATUS(_1_length_0,   1, 0, SAFE32_STATUS_NOT_ENOUGH_ROOM)
+TEST_ENCODE_LENGTH_STATUS(_1_length_0,   1, 0, SAFE32_ERROR_NOT_ENOUGH_ROOM)
 TEST_ENCODE_LENGTH_STATUS(_1_length_1,   1, 1, 1)
-TEST_ENCODE_LENGTH_STATUS(_32_length_1, 32, 1, SAFE32_STATUS_NOT_ENOUGH_ROOM)
+TEST_ENCODE_LENGTH_STATUS(_32_length_1, 32, 1, SAFE32_ERROR_NOT_ENOUGH_ROOM)
 TEST_ENCODE_LENGTH_STATUS(_32_length_2, 32, 2, 2)
 
 TEST_DECODE_LENGTH(_0,        "0",      0, 1)
@@ -453,13 +459,14 @@ TEST(Example, decoding)
     int64_t decoded_length = safe32_get_decoded_length(my_source_data.size());
     std::vector<unsigned char> decode_buffer(decoded_length);
 
-    int64_t used_bytes = safe32_decode(my_source_data.data(),
+    int64_t used_bytes = safe32_decode((uint8_t*)my_source_data.data(),
                                        my_source_data.size(),
                                        decode_buffer.data(),
                                        decode_buffer.size());
     if(used_bytes < 0)
     {
         // TODO: used_bytes is an error code.
+        ASSERT_TRUE(false);
     }
     std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
     my_receive_decoded_data_function(decoded_data);
@@ -472,13 +479,14 @@ TEST(Example, decoding_with_length)
     int64_t decoded_length = safe32_get_decoded_length(my_source_data.size());
     std::vector<unsigned char> decode_buffer(decoded_length);
 
-    int64_t used_bytes = safe32l_decode(my_source_data.data(),
+    int64_t used_bytes = safe32l_decode((uint8_t*)my_source_data.data(),
                                         my_source_data.size(),
                                         decode_buffer.data(),
                                         decode_buffer.size());
     if(used_bytes < 0)
     {
         // TODO: used_bytes is an error code.
+        ASSERT_TRUE(false);
     }
     std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
     my_receive_decoded_data_function(decoded_data);
@@ -490,7 +498,7 @@ TEST(Example, encoding)
 
     bool should_include_length = false;
     int64_t encoded_length = safe32_get_encoded_length(my_source_data.size(), should_include_length);
-    std::vector<char> encode_buffer(encoded_length);
+    std::vector<uint8_t> encode_buffer(encoded_length);
 
     int64_t used_bytes = safe32_encode(my_source_data.data(),
                                        my_source_data.size(),
@@ -499,6 +507,7 @@ TEST(Example, encoding)
     if(used_bytes < 0)
     {
         // TODO: used_bytes is an error code.
+        ASSERT_TRUE(false);
     }
     std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
     my_receive_encoded_data_function(encoded_data);
@@ -510,7 +519,7 @@ TEST(Example, encoding_with_length)
 
     bool should_include_length = true;
     int64_t encoded_length = safe32_get_encoded_length(my_source_data.size(), should_include_length);
-    std::vector<char> encode_buffer(encoded_length);
+    std::vector<uint8_t> encode_buffer(encoded_length);
 
     int64_t used_bytes = safe32l_encode(my_source_data.data(),
                                         my_source_data.size(),
@@ -519,6 +528,7 @@ TEST(Example, encoding_with_length)
     if(used_bytes < 0)
     {
         // TODO: used_bytes is an error code.
+        ASSERT_TRUE(false);
     }
     std::string encoded_data(encode_buffer.begin(), encode_buffer.begin() + used_bytes);
     my_receive_encoded_data_function(encoded_data);

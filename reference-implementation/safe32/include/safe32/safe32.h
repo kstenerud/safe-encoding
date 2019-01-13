@@ -9,17 +9,20 @@ extern "C" {
 
 typedef enum
 {
+    /**
+     * The operation completed successfully.
+     */
     SAFE32_STATUS_OK = 0,
 
     /**
-     * There wasn't enough room in the destination buffer to complete the
-     * operation. Clear out the written portion of the destination buffer
-     * and retry from where src_buffer_ptr points.
+     * Processing has reached the end of either the source or destination
+     * buffer.
      * The operation will have written a pointer to the next byte to read
      * in src_buffer_ptr, and a pointer to one past the last byte written in
-     * dst_buffer_ptr.
+     * dst_buffer_ptr. You will have to copy any unused bytes to the beginning
+     * of the next buffer(s).
      */
-    SAFE32_STATUS_NOT_ENOUGH_ROOM = -1,
+    SAFE32_STATUS_PARTIALLY_COMPLETE = -1,
 
     /**
      * The source data contained an invalid character. Processing cannot
@@ -44,7 +47,47 @@ typedef enum
      * length field.
      */
     SAFE32_ERROR_TRUNCATED_DATA = -4,
-} safe32_status_code;
+
+    /**
+     * An invalid length value was detected.
+     * This happens if the length is negative.
+     */
+    SAFE32_ERROR_INVALID_LENGTH = -5,
+
+    /**
+     * There wasn't enough room in the bufer to complete the operation.
+     */
+    SAFE32_ERROR_NOT_ENOUGH_ROOM = -6,
+} safe32_status;
+
+/**
+ * This logical ORed field allows callers to mark the end of the source and/or
+ * destination data stream.
+ *
+ * Use SAFE32_EXPECT_DST_STREAM_TO_END to determine which stream is expected
+ * to end, and then the other fields to mark which ones actually DID end.
+ */
+typedef enum
+{
+    SAFE32_STREAM_STATE_NONE = 0,
+
+    /**
+     * Either the source or destination stream will be expected to end, but
+     * never both. When this bit is set, the destination stream is expected
+     * to end. When cleared, the source stream is expected to end.
+     */
+    SAFE32_EXPECT_DST_STREAM_TO_END = 1,
+
+    /**
+     * The source buffer endpoint marks the end of the source stream.
+     */
+    SAFE32_SRC_IS_AT_END_OF_STREAM = 2,
+
+    /**
+     * The destination buffer endpoint marks the end of the destination stream.
+     */
+    SAFE32_DST_IS_AT_END_OF_STREAM = 4,
+} safe32_stream_state;
 
 
 
@@ -65,6 +108,9 @@ const char* safe32_version();
  * off, it is only an estimate, but it is guaranteed to be AT LEAST big enough
  * to store the decoded data.
  *
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: The length was negative.
+ *
  * @param encoded_length The length of the encoded safe32 sequence.
  * @return The length of the corresponding decoded safe32 sequence.
  */
@@ -74,9 +120,10 @@ int64_t safe32_get_decoded_length(int64_t encoded_length);
  * Completely decodes a safe32 sequence.
  * It is expected that src_buffer points to a COMPLETE sequence.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *  * SAFE32_ERROR_INVALID_SOURCE_DATA: The data was invalid.
- *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE32_ERROR_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *
  * @param src_buffer The buffer containing the complete safe32 sequence.
  * @param src_buffer_length The length in bytes of the sequence.
@@ -84,18 +131,19 @@ int64_t safe32_get_decoded_length(int64_t encoded_length);
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe32_decode(const char* src_buffer,
+int64_t safe32_decode(const uint8_t* src_buffer,
                       int64_t src_buffer_length,
-                      unsigned char* dst_buffer,
+                      uint8_t* dst_buffer,
                       int64_t dst_buffer_length);
 
 /**
  * Completely decodes a safe32L (safe32 + length) sequence.
  * It is expected that src_buffer points to a COMPLETE sequence.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *  * SAFE32_ERROR_INVALID_SOURCE_DATA: The data was invalid.
- *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE32_ERROR_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *  * SAFE32_ERROR_UNTERMINATED_LENGTH_FIELD: The length field is truncated.
  *  * SAFE32_ERROR_TRUNCATED_DATA: The source data is truncated.
  *
@@ -105,25 +153,30 @@ int64_t safe32_decode(const char* src_buffer,
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe32l_decode(const char* src_buffer,
+int64_t safe32l_decode(const uint8_t* src_buffer,
                        int64_t src_length,
-                       unsigned char* dst_buffer,
+                       uint8_t* dst_buffer,
                        int64_t dst_length);
 
 /**
  * Estimate the number of bytes required to encode some binary data.
  *
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: The length was negative.
+ *
  * @param decoded_length The length of the original data.
  * @param include_length_field If true, include the length field into the calculation.
  * @return The number of bytes required to encode the data.
  */
-int64_t safe32_get_encoded_length(int64_t decoded_length, bool include_length_field);
+int64_t safe32_get_encoded_length(int64_t decoded_length,
+                                  bool include_length_field);
 
 /**
  * Completely encodes some binary data.
  * It is expected that src_buffer points to the COMPLETE data.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *
  * @param src_buffer The buffer containing the complete binary data.
@@ -132,16 +185,17 @@ int64_t safe32_get_encoded_length(int64_t decoded_length, bool include_length_fi
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe32_encode(const unsigned char* src_buffer,
+int64_t safe32_encode(const uint8_t* src_buffer,
                       int64_t src_buffer_length,
-                      char* dst_buffer,
+                      uint8_t* dst_buffer,
                       int64_t dst_buffer_length);
 
 /**
  * Completely encodes a length field & some binary data.
  * It is expected that src_buffer points to the COMPLETE data.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *
  * @param src_buffer The buffer containing the complete binary data.
@@ -150,9 +204,9 @@ int64_t safe32_encode(const unsigned char* src_buffer,
  * @param dst_buffer_length The lenfth of the destination buffer.
  * @return the number of bytes written, or a status code.
  */
-int64_t safe32l_encode(const unsigned char* src_buffer,
+int64_t safe32l_encode(const uint8_t* src_buffer,
                       int64_t src_buffer_length,
-                      char* dst_buffer,
+                      uint8_t* dst_buffer,
                       int64_t dst_buffer_length);
 
 
@@ -164,7 +218,8 @@ int64_t safe32l_encode(const unsigned char* src_buffer,
 /**
  * Read a length field from a buffer.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: The buffer length was negative.
  *  * SAFE32_ERROR_UNTERMINATED_LENGTH_FIELD: The length field is truncated.
  *
  * @param buffer Where to read the length field from.
@@ -172,7 +227,9 @@ int64_t safe32l_encode(const unsigned char* src_buffer,
  * @param length Pointer to where the length falue should be stored.
  * @return the number of bytes processed to read the length, or an error code.
  */
-int64_t safe32_read_length_field(const char* buffer, int64_t buffer_length, uint64_t* length);
+int64_t safe32_read_length_field(const uint8_t* buffer,
+                                 int64_t buffer_length,
+                                 uint64_t* length);
 
 /**
  * Decode part of a safe32 sequence.
@@ -181,7 +238,7 @@ int64_t safe32_read_length_field(const char* buffer, int64_t buffer_length, uint
  *
  * Attempts to decode and write as much as it can based on the input data.
  * This function will not attempt to write a trailing partial group unless
- * is_end_of_data is set.
+ * stream_state contains SAFE32_SRC_IS_AT_END_OF_STREAM or SAFE32_DST_IS_AT_END_OF_STREAM.
  *
  * Upon return:
  *
@@ -192,9 +249,13 @@ int64_t safe32_read_length_field(const char* buffer, int64_t buffer_length, uint
  *
  *   dst_buffer_ptr will point to one past the last byte written.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_STATUS_OK: The process completed successfully.
+ *  * SAFE32_STATUS_PARTIALLY_COMPLETE: The process completed, but not all data was written.
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *  * SAFE32_ERROR_INVALID_SOURCE_DATA: The data was invalid.
- *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer is full.
+ *  * SAFE32_ERROR_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
+ *  * SAFE32_ERROR_TRUNCATED_DATA: The source data was truncated.
  *
  * @param src_buffer_ptr Pointer to your source buffer pointer (input/output).
  * @param src_length Length of the source buffer.
@@ -203,16 +264,17 @@ int64_t safe32_read_length_field(const char* buffer, int64_t buffer_length, uint
  * @param is_end_of_data If true, this is the last packet of data to decode.
  * @return Status code indicating the result of the operation.
  */
-safe32_status_code safe32_decode_feed(const char** src_buffer_ptr,
-                                      int64_t src_length,
-                                      unsigned char** dst_buffer_ptr,
-                                      int64_t dst_length,
-                                      bool is_end_of_data);
+safe32_status safe32_decode_feed(const uint8_t** enc_buffer_ptr,
+                                 int64_t enc_length,
+                                 uint8_t** dec_buffer_ptr,
+                                 int64_t dec_length,
+                                 safe32_stream_state stream_state);
 
 /**
  * Write a length field to a buffer.
  *
- * Can return the following error codes:
+ * Can return the following status codes:
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer was not big enough.
  *
  * @param length The length value to write.
@@ -220,7 +282,9 @@ safe32_status_code safe32_decode_feed(const char** src_buffer_ptr,
  * @param dst_buffer_length Length of the destination buffer.
  * @return The number of bytes written, or an error code.
  */
-int64_t safe32_write_length_field(uint64_t length, char* dst_buffer, int64_t dst_buffer_length);
+int64_t safe32_write_length_field(uint64_t length,
+                                  uint8_t* dst_buffer,
+                                  int64_t dst_buffer_length);
 
 /**
  * Encode a partial sequence of binary data.
@@ -240,8 +304,10 @@ int64_t safe32_write_length_field(uint64_t length, char* dst_buffer, int64_t dst
  *
  *   dst_buffer_ptr will point to one past the last byte written.
  *
- * Can return the following error codes:
- *  * SAFE32_STATUS_NOT_ENOUGH_ROOM: The destination buffer is full.
+ * Can return the following status codes:
+ *  * SAFE32_STATUS_OK: The process completed successfully.
+ *  * SAFE32_STATUS_PARTIALLY_COMPLETE: The process completed, but not all data was written.
+ *  * SAFE32_ERROR_INVALID_LENGTH: A length was negative.
  *
  * @param src_buffer_ptr Pointer to your source buffer pointer (input/output).
  * @param src_length Length of the source buffer.
@@ -250,11 +316,11 @@ int64_t safe32_write_length_field(uint64_t length, char* dst_buffer, int64_t dst
  * @param is_end_of_data If true, this is the last packet of data to encode.
  * @return Status code indicating the result of the operation.
  */
-safe32_status_code safe32_encode_feed(const unsigned char** src_buffer_ptr,
-                                      int64_t src_length,
-                                      char** dst_buffer_ptr,
-                                      int64_t dst_length,
-                                      bool is_end_of_data);
+safe32_status safe32_encode_feed(const uint8_t** src_buffer_ptr,
+                                 int64_t src_length,
+                                 uint8_t** dst_buffer_ptr,
+                                 int64_t dst_length,
+                                 bool is_end_of_data);
 
 
 #ifdef __cplusplus 
