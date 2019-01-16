@@ -7,7 +7,8 @@ It is especially useful for things requiring human input such as activation code
 
 ### Features:
 
- * Safe for use in URLs
+ * Safe for use in JSON, SGML formats, source code strings, without escaping
+ * Safe for use in URLs without escaping
  * Safe for use in filenames
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
@@ -24,7 +25,6 @@ It is especially useful for things requiring human input such as activation code
  * No escaping necessary
  * Liberal whitespace rules
  * Safe for use in filenames
- * No proliferation of incompatible offshoots
  * Better end-of-field and truncation detection
  * Sortable in generic text sorting algorithms (such as file listings)
 
