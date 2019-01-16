@@ -27,23 +27,26 @@ Safe85 is a binary data to text encoding scheme that is safe to be passed unesca
 Encoding
 --------
 
-Safe85 encoding uses an alphabet of 85 characters from the single-byte UTF-8 set to represent radix-85 codes (where each code has an individual value from 0 - 84). These codes are mathematically grouped magnitudally into big-endian sequences of 5 codes, giving a range of 85^5 = 0x108780EC5, of which only 0x100000000 values are used, giving 32 bits (4 bytes ) of data storage per group. Such an ecoding scheme multiplies the size of the encoded data by a factor of 1.25.
+Safe85 encoding uses an alphabet of 85 characters from the single-byte UTF-8 set to represent radix-85 codes (where each code has an individual value from 0 - 84). These codes are mathematically grouped magnitudally into big-endian sequences of 5 codes, giving a range of 85^5 = 4437053125 (0x108780EC5), of which only 0x100000000 values are used, giving 32 bits (4 bytes) of data storage per group. Such an ecoding scheme multiplies the size of the encoded data by a factor of 1.25.
 
-Approximation:
+The following approximation shows the general idea:
 
     Original: [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd]
     Encoded:  [aaaaaa] [abbbbb] [bbbccc] [cccccd] [dddddd]
 
-Calculation:
+First, the accumulator is filled big-endian style with 4 bytes of data:
 
     accumulator = (byte0 * 0x1000000) + (byte1 * 0x10000) + (byte2 * 0x100) + byte3
+
+Next, the accumulator is broken down into radix-85 codes:
+
     code0 = (accumulator / 52200625) % 85
     code1 = (accumulator / 614125) % 85
     code2 = (accumulator / 7225) % 85
     code3 = (accumulator / 85) % 85
     code4 = accumulator % 85
 
-Since the accumulator range is from 0 - 0xffffffff, any combinations of codes that exceed 0xffffffff (code sequence `82 23 54 12 0`) are not allowed. This also implies that the first code cannot be larger than 82.
+Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of codes that exceed 0xffffffff (any code sequence > `82 23 54 12 0`) are not allowed. This also implies that the first code cannot be larger than 82.
 
 | Code 0 | Code 1 | Code 2 | Code 3 | Code 4 |
 | ------ | ------ | ------ | ------ | ------ |
@@ -51,7 +54,7 @@ Since the accumulator range is from 0 - 0xffffffff, any combinations of codes th
 
 When less than 4 bytes of source data are available, the accumulator is built the same as before, substituting 0x00 for each missing byte. When converting the accumulator into radix-85 codes, only the codes required to encode the actual bytes are used.
 
-Approximation:
+Approximation to show the general idea:
 
     Original:    [aaaaaaaa] [bbbbbbbb] [cccccccc]
     Accumulator: [aaaaaa] [abbbbb] [bbbccc] [ccccc0] [000000]
