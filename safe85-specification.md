@@ -144,15 +144,15 @@ This gives a field value in the range 0 - 614124 (0x95eec), which is then subdiv
 | Repeat Count | Byte Value |
 | 0 - 2398     | 0 - 255    |
 
-Since the 3-byte run-length encoding allows repeat counts up to 30 for all byte values, we implicitly add 31 to the 4-byte run-length repeat count to avoid overlap, giving a range of 31-2401.
+Since the 3-byte run-length encoding allows repeat counts up to 30 for all byte values, we implicitly add 31 to the 4-byte run-length repeat count to avoid overlap, giving a range of 31-2429.
 
     joint_field = value2 * 7225 + value1 * 85 + value0
     byte_value = joint_field & 0xff
     repeat_count = (joint_field >> 8) + 31
 
-Note: Since the value 614124 (0x95eec) does not fall on a bit boundary, only byte values from 0x00 - 0xec can have a repeat count of 2401 (0x95e + 31). All other byte values have a maximum count value of 2400.
+Note: Since the value 614124 (0x95eec) does not fall on a bit boundary, only byte values from 0x00 - 0xec can have a repeat count of 2429 (0x95e + 31). All other byte values have a maximum count value of 2428.
 
-With this encoding scheme, we can encode up to 2401 bytes of repeating data into 4 characters. Normal encoding would require 3002 characters to encode the same data. We can thus achieve up to a 750x space savings over uncompressed data, and up to 50x savings over 3-character run-length encoding.
+With this encoding scheme, we can encode up to 2429 bytes of repeating data into 4 characters. Normal encoding would require 3037 characters to encode the same data. We can thus achieve up to a 760x space savings over uncompressed data, and up to 50x savings over 3-character run-length encoding.
 
 
 
