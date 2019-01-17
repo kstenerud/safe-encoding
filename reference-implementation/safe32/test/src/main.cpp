@@ -11,11 +11,11 @@ int main(int argc, char **argv)
 
 #include <safe32/safe32.h>
 
-#define KSLogger_LocalLevel DEBUG
+// #define KSLogger_LocalLevel TRACE
 #include "kslogger.h"
 
-#define DECODED_BYTES_PER_GROUP 5
-#define ENCODED_BYTES_PER_GROUP 8
+static const int g_bytes_per_group  = 5;
+static const int g_chunks_per_group = 8;
 
 
 // ----------
@@ -100,7 +100,7 @@ void assert_chunked_encode_src_packeted(int length)
     std::vector<uint8_t> encode_buffer(length * 2);
     std::vector<uint8_t> decode_buffer(length);
 
-    for(int packet_size=length-1; packet_size >= DECODED_BYTES_PER_GROUP; packet_size--)
+    for(int packet_size=length-1; packet_size >= g_bytes_per_group; packet_size--)
     {
         KSLOG_DEBUG("packet size %d", packet_size);
         safe32_status status = SAFE32_STATUS_OK;
@@ -147,7 +147,7 @@ void assert_chunked_encode_dst_packeted(int length)
     std::vector<uint8_t> encode_buffer(length * 2);
     std::vector<uint8_t> decode_buffer(length);
 
-    for(int packet_size=length-1; packet_size >= ENCODED_BYTES_PER_GROUP; packet_size--)
+    for(int packet_size=length-1; packet_size >= g_chunks_per_group; packet_size--)
     {
         KSLOG_DEBUG("packet size %d", packet_size);
         safe32_status status = SAFE32_STATUS_OK;
@@ -191,7 +191,7 @@ void assert_chunked_decode_dst_packeted(int length)
     const uint8_t* encoded_end = (uint8_t*)encode_buffer.data() + encoded_length;
 
 
-    for(int packet_size=length-1; packet_size >= ENCODED_BYTES_PER_GROUP; packet_size--)
+    for(int packet_size=length-1; packet_size >= g_chunks_per_group; packet_size--)
     {
         KSLOG_DEBUG("packet size %d", packet_size);
         safe32_status status = SAFE32_STATUS_OK;

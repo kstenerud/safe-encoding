@@ -37,16 +37,16 @@ Advantages
 
 The safe encodings have been specially designed to avoid numerous issues with other binary-to-text encoding schemes. Here are the relative advantages of the various safeXYZ and baseXYZ encodings:
 
-| Encoding   | SGML | JSON | Code | URL | File | Host | Trunc | Sort | White | Length | Human | Pad | Alpha | Bloat | Comp |
-| ---------- | ---- | ---- | ---- | --- | ---- | ---- | ----- | ---- | ----- | ------ | ----- | --- | ----- | ----- | ---- |
-| **safe16** |   Y  |   Y  |   Y  |  Y  |   Y  |   Y  |   Y   |   Y  |   Y   |    Y   |   Y   |  -  |   16  |  2.0  |   -  |
-| **base16** |   Y  |   Y  |   Y  |  Y  |   Y  |   Y  |   -   |   Y  |   -   |    -   |   Y   |  -  |   16  |  2.0  |   -  |
-| **safe32** |   Y  |   Y  |   Y  |  Y  |   Y  |   Y  |   Y   |   Y  |   Y   |    Y   |   Y   |  -  |   32  |  1.6  |   -  |
-| **base32** |   Y  |   Y  |   Y  | ^2  |   Y  |   Y  |   -   |   -  |   -   |    -   |   -   |  Y  |   33  |  1.6  |   -  |
-| **safe64** |   Y  |   Y  |   Y  |  Y  |   Y  |   -  |   Y   |   Y  |   Y   |    Y   |   -   |  -  |   64  |  1.33 |   -  |
-| **base64** |   Y  |   Y  |   Y  | ^3  |  ^3  |   -  |   -   |   -  |   -   |    -   |   -   |  Y  |   65  |  1.33 |   -  |
-| **safe85** |   Y  |   Y  |   Y  |  Y  |  ^1  |   -  |   Y   |   Y  |   Y   |    Y   |   -   |  -  |   85  |  1.25 | 750x |
-| **base85** |   -  |   -  |   -  |  -  |   -  |   -  |   -   |   Y  |   Y   |    -   |   -   |  Y  |   87  |  1.25 |   5x |
+| Encoding   | SGML | JSON | Code | URL | File | Host | Trunc | Sort | White | Length | Human | No-Pad | Alpha | Bloat | Comp |
+| ---------- | ---- | ---- | ---- | --- | ---- | ---- | ----- | ---- | ----- | ------ | ----- | ------ | ----- | ----- | ---- |
+| **safe16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   16  |  2.0  |      |
+| **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |      |
+| **safe32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   32  |  1.6  |      |
+| **base32** |   ✓  |   ✓  |   ✓  |  ²  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |      |
+| **safe64** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   64  |  1.33 |      |
+| **base64** |   ✓  |   ✓  |   ✓  |  ³  |   ³  |      |       |      |       |        |       |        |   65  |  1.33 |      |
+| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ¹  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 | 750x |
+| **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |   5x |
 
 ##### Legend:
 
@@ -61,16 +61,16 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 * **White**:  Allows arbitrary whitespace (whitespace anywhere in the stream)
 * **Length**: Supports length fields
 * **Human**:  Handles easily-confused characters when input by humans
-* **Pad**:    Encoded data is padded to a group boundary
+* **No-Pad**: Encoding scheme does not require padding
 * **Alpha**:  Size of the encoding alphabet (including special characters)
 * **Bloat**:  How much the size increases from original form to encoded form
 * **Comp**:   Maximum compression performance
 
 ##### Notes:
 
-* **^1**: Only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
-* **^2**: Only for general delimiters in URLs. Sub-delimiters may need escaping
-* **^3**: Some restrictions do not apply if using URL and filename safe variant
+* **¹**: Only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
+* **²**: Only for general delimiters in URLs. Sub-delimiters may need escaping
+* **³**: Some restrictions do not apply if using URL and filename safe variant
 
 
 

@@ -224,7 +224,7 @@ int64_t safe32l_encode(const uint8_t* src_buffer,
  *
  * @param buffer Where to read the length field from.
  * @param buffer_length Length of the buffer.
- * @param length Pointer to where the length falue should be stored.
+ * @param length Pointer to where the length value should be stored.
  * @return the number of bytes processed to read the length, or an error code.
  */
 int64_t safe32_read_length_field(const uint8_t* buffer,

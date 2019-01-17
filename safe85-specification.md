@@ -27,7 +27,7 @@ Safe85 is a binary data to text encoding scheme that is safe to be passed unesca
 Encoding
 --------
 
-Safe85 encoding uses an alphabet of 85 characters from the single-byte UTF-8 set to represent radix-85 codes (where each code has an individual value from 0 - 84). These codes are mathematically grouped magnitudally into big-endian sequences of 5 codes, giving a range of 85^5 = 4437053125 (0x108780EC5), of which only 0x100000000 values are used, giving 32 bits (4 bytes) of data storage per group. Such an ecoding scheme multiplies the size of the encoded data by a factor of 1.25.
+Safe85 encoding uses an alphabet of 85 characters from the single-byte UTF-8 set to represent radix-85 chunks (where each chunk has an individual value from 0 - 84). These chunks are grouped magnitudally into big-endian sequences of 5 chunks, giving a range of 85^5 = 4437053125 (0x108780EC5), of which only 0x100000000 values are used, giving 32 bits (4 bytes) of data storage per group. Such an ecoding scheme multiplies the size of the encoded data by a factor of 1.25.
 
 The following approximation shows the general idea:
 
@@ -38,21 +38,21 @@ First, the accumulator is filled big-endian style with 4 bytes of data:
 
     accumulator = (byte0 * 0x1000000) + (byte1 * 0x10000) + (byte2 * 0x100) + byte3
 
-Next, the accumulator is broken down into radix-85 codes:
+Next, the accumulator is broken down into radix-85 chunks:
 
-    code0 = (accumulator / 52200625) % 85
-    code1 = (accumulator / 614125) % 85
-    code2 = (accumulator / 7225) % 85
-    code3 = (accumulator / 85) % 85
-    code4 = accumulator % 85
+    chunk0 = (accumulator / 52200625) % 85
+    chunk1 = (accumulator / 614125) % 85
+    chunk2 = (accumulator / 7225) % 85
+    chunk3 = (accumulator / 85) % 85
+    chunk4 = accumulator % 85
 
-Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of codes that exceed 0xffffffff (any code sequence > `82 23 54 12 0`) are not allowed. This also implies that the first code cannot be larger than 82.
+Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk cannot be larger than 82.
 
-| Code 0 | Code 1 | Code 2 | Code 3 | Code 4 |
-| ------ | ------ | ------ | ------ | ------ |
-| 0 - 82 | 0 - 84 | 0 - 84 | 0 - 84 | 0 - 84 |
+| Chunk 0 | Chunk 1 | Chunk 2 | Chunk 3 | Chunk 4 |
+| ------- | ------- | ------- | ------- | ------- |
+| 0 - 82  | 0 - 84  | 0 - 84  | 0 - 84  | 0 - 84  |
 
-When less than 4 bytes of source data are available, the accumulator is built the same as before, substituting 0x00 for each missing byte. When converting the accumulator into radix-85 codes, only the codes required to encode the actual bytes are used.
+When less than 4 bytes of source data are available, the accumulator is built the same as before, substituting 0x00 for each missing byte. When converting the accumulator into radix-85 chunks, only the chunks required to encode the actual bytes are used.
 
 Approximation to show the general idea:
 
@@ -68,7 +68,7 @@ Approximation to show the general idea:
     Accumulator: [aaaaaa] [a00000] [000000] [000000] [000000]
     Encoded:     [aaaaaa] [a00000]
 
-Once the codes have been determined, they are output as characters according to the following alphabet:
+Once the chunks have been determined, they are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char     | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | -------- | ------ | ---- | ------ | ---- |
@@ -96,16 +96,16 @@ The alphabet is chosen for text system safety & convenience, and is ordered acco
 
 Certain kinds of data will contain the same byte value repeated many times. In such cases, it's more space efficient to encode the data in run-lengths.
 
-Since the initial code values `83` and `84` are invalid (they'd place the accumulator outside of the range 0 - 0xffffffff no matter what the other codes are), we assign these special meanings as run-length encoding initiators.
+Since the initial chunk values `83` and `84` are invalid (they'd place the accumulator outside of the range 0 - 0xffffffff no matter what the other chunks are), we assign these special meanings as run-length encoding initiators.
 
 
 #### 3-Character Run-Length Encoding
 
-3-character run-length encoding is marked by the special initial code value `83`. Upon encountering this code, the two subsequent characters are decoded and combined mathematically to build a joint repeat and byte value field:
+3-character run-length encoding is marked by the special initial chunk value `83`. Upon encountering this chunk, the two subsequent characters are decoded and combined mathematically to build a joint repeat and byte value field:
 
-| code | value 1 | value 0 |
-| ---- | ------- | ------- |
-| 83   | 0 - 84  | 0 - 84  |
+| chunk | value 1 | value 0 |
+| ----- | ------- | ------- |
+| 83    | 0 - 84  | 0 - 84  |
 
 Thus, the joint field is built like so: `joint_field = value1 * 85 + value0`
 
@@ -129,11 +129,11 @@ With this encoding scheme, we can encode up to 31 bytes of repeating data into 3
 
 #### 4-Character Run-Length Encoding
 
-If you have very long sequences of repeating byte values, the 4-character run-length encoding (code `84`)provides better compression:
+If you have very long sequences of repeating byte values, the 4-character run-length encoding (chunk `84`)provides better compression:
 
-| code | value 2 | value 1 | value 0 |
-| ---- | ------- | ------- | ------- |
-| 84   | 0 - 84  | 0 - 84  | 0 - 84  |
+| chunk | value 2 | value 1 | value 0 |
+| ----- | ------- | ------- | ------- |
+| 84    | 0 - 84  | 0 - 84  | 0 - 84  |
 
     joint_field = value2 * 7225 + value1 * 85 + value0
 
@@ -150,7 +150,7 @@ Since the 3-byte run-length encoding allows repeat counts up to 30 for all byte 
     byte_value = joint_field & 0xff
     repeat_count = (joint_field >> 8) + 31
 
-Note: Since the value 614124 (0x95eec) does not fall on a bit boundary, only byte values from 0x00 - 0xec can have a repeat count of 2429 (0x95e + 31). All other byte values have a maximum count value of 2428.
+Note: Since the value 614124 (0x95eec) does not fall on a bit boundary, only byte values from 0x00 - 0xec can have a repeat count of 2429 (2398 + 31). All other byte values have a maximum count value of 2428.
 
 With this encoding scheme, we can encode up to 2429 bytes of repeating data into 4 characters. Normal encoding would require 3037 characters to encode the same data. We can thus achieve up to a 760x space savings over uncompressed data, and up to 50x savings over 3-character run-length encoding.
 
