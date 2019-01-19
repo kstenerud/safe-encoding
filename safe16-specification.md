@@ -56,8 +56,6 @@ The alphabet is ordered according to the characters' ordinal positions in UTF-8,
 
 Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`).
 
-A human may input substitutes. A decoder must accept substitutes. An encoder must not output substitutes.
-
 
 Whitespace
 ----------

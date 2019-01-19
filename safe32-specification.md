@@ -132,6 +132,15 @@ Once the chunk values have been determined, they are output as characters accord
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
+The characters of the alphabet are chosen to minimize confusion when entered by humans:
+
+ * No symbols are included
+ * `1`, `l`, `i` (and by extension `I`) are not included
+ * `O` and `o` are substitutes for `0`
+ * Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`)
+
+Note: Although they are technically valid, an encoder must not output `O` or `o`. Use only `0`.
+
 
 Whitespace
 ----------
