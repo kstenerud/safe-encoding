@@ -1,11 +1,11 @@
 Safe85 Encoding
 ===============
 
-Safe85 is a binary data to text encoding scheme that is safe to be passed unescaped through processing systems that expect human readable text.
+Safe85 is a binary data encoding scheme that is safe to be passed through processing systems expecting human readable text.
 
 ### Features:
 
- * Safe for use in JSON, SGML formats, source code strings, without escaping
+ * Safe for use in JSON, SGML formats, source code string literals, without escaping
  * Mostly safe for URLs (only sub-delimiters need to be escaped)
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
@@ -24,51 +24,87 @@ Safe85 is a binary data to text encoding scheme that is safe to be passed unesca
  * Sortable in generic text sorting algorithms
 
 
+
 Encoding
 --------
 
-Safe85 encoding uses an alphabet of 85 characters from the single-byte UTF-8 set to represent radix-85 chunks (where each chunk has an individual value from 0 - 84). These chunks are grouped magnitudally into big-endian sequences of 5 chunks, giving a range of 85^5 = 4437053125 (0x108780EC5), of which only 0x100000000 values are used, giving 32 bits (4 bytes) of data storage per group. Such an ecoding scheme multiplies the size of the encoded data by a factor of 1.25.
+Safe85 encoding uses an alphabet of 85 characters from the single-byte printable UTF-8 set to represent radix-85 chunks (where each chunk has an individual value from 0 - 84). These chunks are grouped magnitudally into big-endian sequences of 5 chunks, giving a range of 85^5 = (0x108780EC5), of which only 0x100000000 values are used, giving 32 bits (4 bytes) of data storage per group. Such an ecoding scheme multiplies the size of the data by a factor of 1.25.
 
-The following approximation shows the general idea:
+The following semi-accurate approximation shows the general idea:
 
     Original: [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd]
     Encoded:  [aaaaaa] [abbbbb] [bbbccc] [cccccd] [dddddd]
 
-First, the accumulator is filled big-endian style with 4 bytes of data:
 
-    accumulator = (byte0 * 0x1000000) + (byte1 * 0x10000) + (byte2 * 0x100) + byte3
+### Encoding Process
 
-Next, the accumulator is broken down into radix-85 chunks:
+The encoding process encodes groups of 4 bytes, outputting 5 chunks per group. If the source data length is not a multiple of 4, then the final group is output as a partial group, using only as many chunks as is necessary to encode the remaining bytes, with the unused high portion of the highest chunk cleared.
 
-    chunk0 = (accumulator / 52200625) % 85
-    chunk1 = (accumulator / 614125) % 85
-    chunk2 = (accumulator / 7225) % 85
-    chunk3 = (accumulator / 85) % 85
-    chunk4 = accumulator % 85
+#### 4 Byte Full Group
 
-Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk cannot be larger than 82.
+First, an accumulator is filled big-endian style with 4 bytes of data:
+
+    accumulator = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]
+
+Next, the accumulator is broken down big-endian style into radix-85 chunks:
+
+    chunk[0] = (accumulator / 52200625) % 85
+    chunk[1] = (accumulator / 614125) % 85
+    chunk[2] = (accumulator / 7225) % 85
+    chunk[3] = (accumulator / 85) % 85
+    chunk[4] = accumulator % 85
+
+Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk cannot be larger than 82, which will be important in a later section.
 
 | Chunk 0 | Chunk 1 | Chunk 2 | Chunk 3 | Chunk 4 |
 | ------- | ------- | ------- | ------- | ------- |
 | 0 - 82  | 0 - 84  | 0 - 84  | 0 - 84  | 0 - 84  |
 
-When less than 4 bytes of source data are available, the accumulator is built the same as before, substituting 0x00 for each missing byte. When converting the accumulator into radix-85 chunks, only the chunks required to encode the actual bytes are used.
+#### 3 Byte Partial Group
 
-Approximation to show the general idea:
+Approximation:
 
-    Original:    [aaaaaaaa] [bbbbbbbb] [cccccccc]
-    Accumulator: [aaaaaa] [abbbbb] [bbbccc] [ccccc0] [000000]
-    Encoded:     [aaaaaa] [abbbbb] [bbbccc] [ccccc0]
+    Bytes:  [aaaaaaaa] [bbbbbbbb] [cccccccc]
+    Chunks: [000aaa] [aaaabb] [bbbbbc] [cccccc]
 
-    Original:    [aaaaaaaa] [bbbbbbbb]
-    Accumulator: [aaaaaa] [abbbbb] [bbb000] [000000] [000000]
-    Encoded:     [aaaaaa] [abbbbb] [bbb000]
+Algorithm:
 
-    Original:    [aaaaaaaa]
-    Accumulator: [aaaaaa] [a00000] [000000] [000000] [000000]
-    Encoded:     [aaaaaa] [a00000]
+    accumulator = (bytes[0] << 16) | (bytes[1] << 8) | bytes[2]
+    chunk[0] = (accumulator / 614125) % 85
+    chunk[1] = (accumulator / 7225) % 85
+    chunk[2] = (accumulator / 85) % 85
+    chunk[3] = accumulator % 85
 
-Once the chunks have been determined, they are output as characters according to the following alphabet:
+#### 2 Byte Partial Group
+
+Approximation:
+
+    Bytes:  [aaaaaaaa] [bbbbbbbb]
+    Chunks: [0000aa] [aaaaab] [bbbbbb]
+
+Algorithm:
+
+    accumulator = (bytes[0] << 8) | bytes[1]
+    chunk[0] = (accumulator / 7225) % 85
+    chunk[1] = (accumulator / 85) % 85
+    chunk[2] = accumulator % 85
+
+#### 1 Byte Partial Group
+
+Approximation:
+
+    Bytes:  [aaaaaaaa]
+    Chunks: [00000a] [aaaaaa]
+
+Algorithm:
+
+    accumulator = bytes[0]
+    chunk[0] = (accumulator / 85) % 85
+    chunk[1] = accumulator % 85
+
+#### Alphabet
+
+Once the chunk values have been determined, they are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char     | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | -------- | ------ | ---- | ------ | ---- |
@@ -89,7 +125,7 @@ Once the chunks have been determined, they are output as characters according to
 | **0e** | `4`  | **1e** | `G`  | **2e** | `W`  | **3e** | `h`      | **4e** | `x`  |        |      |
 | **0f** | `5`  | **1f** | `H`  | **2f** | `X`  | **3f** | `i`      | **4f** | `y`  |        |      |
 
-The alphabet is chosen for text system safety & convenience, and is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will binary sort in the same order as the data it represents.
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
 
 ### Run-Length Encoding
@@ -107,7 +143,7 @@ Since the initial chunk values `83` and `84` are invalid (they'd place the accum
 | ----- | ------- | ------- |
 | 83    | 0 - 84  | 0 - 84  |
 
-Thus, the joint field is built like so: `joint_field = value1 * 85 + value0`
+The joint field is built like so: `joint_field = value1 * 85 + value0`
 
 This gives a field value in the range 0 - 7224 (0x1c38), which is then subdivided into a repeat count, and the byte value to be repeated:
 
@@ -122,14 +158,14 @@ Since a run-length sequence is 3 characters long, which in normal encoding can e
     byte_value = joint_field & 0xff
     repeat_count = (joint_field >> 8) + 3
 
-Note: Since the value 7224 (0x1c38) does not fall on a bit boundary, only byte values from 0x00 - 0x38 can have a repeat count of 31 (0x1c + 3). All other byte values have a maximum repeat count of 30.
+Note: Since the value 7224 (0x1c38) does not fall on a bit boundary, only byte values from 0x00 - 0x38 can have a repeat count of 31 (28 + 3). All other byte values have a maximum repeat count of 30.
 
-With this encoding scheme, we can encode up to 31 bytes of repeating data into 3 characters. Normal encoding would require 39 characters to encode the same data. We can thus achieve up to a 13x space savings.
+With this encoding scheme, we can encode up to 31 bytes of repeating data into 3 characters. Normal encoding would require 39 characters to encode the same data. It is thus possible to achieve up to 13x space savings over uncompressed data.
 
 
 #### 4-Character Run-Length Encoding
 
-If you have very long sequences of repeating byte values, the 4-character run-length encoding (chunk `84`)provides better compression:
+If you have very long sequences of repeating byte values, the 4-character run-length encoding (chunk `84`) provides better compression:
 
 | chunk | value 2 | value 1 | value 0 |
 | ----- | ------- | ------- | ------- |
@@ -139,7 +175,7 @@ If you have very long sequences of repeating byte values, the 4-character run-le
 
 This gives a field value in the range 0 - 614124 (0x95eec), which is then subdivided into a repeat count, and the byte value to be repeated:
 
-| Bits 8-12    | Bits 0-7   |
+| Bits 8-19    | Bits 0-7   |
 | ------------ | ---------- |
 | Repeat Count | Byte Value |
 | 0 - 2398     | 0 - 255    |
@@ -152,14 +188,14 @@ Since the 3-byte run-length encoding allows repeat counts up to 30 for all byte 
 
 Note: Since the value 614124 (0x95eec) does not fall on a bit boundary, only byte values from 0x00 - 0xec can have a repeat count of 2429 (2398 + 31). All other byte values have a maximum count value of 2428.
 
-With this encoding scheme, we can encode up to 2429 bytes of repeating data into 4 characters. Normal encoding would require 3037 characters to encode the same data. We can thus achieve up to a 760x space savings over uncompressed data, and up to 50x savings over 3-character run-length encoding.
+With this encoding scheme, we can encode up to 2429 bytes of repeating data into 4 characters. Normal encoding would require 3037 characters to encode the same data. It is thus possible to achieve up to a 760x space savings over uncompressed data, and up to 50x savings over 3-character run-length encoding.
 
 
 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace as needed by the medium it will be transferred across. For example, some mediums may have a maximum line length, or require indentation. It is up to the encoder to decide when and how whitespace will occur. Whitespace may occur at any point in the data stream. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -171,10 +207,11 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 0020       | Space           |
 
 
+
 Termination
 -----------
 
-In the last (possibly partial) group, the number of characters indicates how many bytes of data remain to be decoded:
+In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded:
 
 | Characters | Remaining Bytes |
 | ---------- | --------------- |
@@ -189,16 +226,14 @@ In the last (possibly partial) group, the number of characters indicates how man
 Examples
 --------
 
-TODO
-
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: DG91sN3tqNgtI5DS07k
+    Encoded: 8F2{*RVCLI8LDzZ!3e
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-    Encoded: tW9abzVsQMg0aItgJrhV
+    Encoded: szEXiyl.1C!Tc1o-w;X
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 7S4xEm60X8_lGOPhn8Otq-
+    Encoded: 0stg*0r4~*MKP6zkj.X1
 
 ------------------------------------------------------------------------------
 
@@ -213,7 +248,7 @@ While safe85 is sufficient for most systems, there are transmission mediums wher
 Encoding
 --------
 
-Safe85L works essentially the same as safe85, except that it is prefixed by a length field. The length field is built incrementally using the first 64 characters of the safe85 encoding alphabet, until sufficient bits are available to encode the length of the data.
+Safe85L works essentially the same as safe85, except that it is prefixed by a length field. The length field is built incrementally using **only the first 64 characters of the safe85 encoding alphabet** (for a 6-bit value), until sufficient bits are available to encode the length of the data. Characters `j` (index 64) and above are invalid for the length field.
 
 The length encoding uses the lower 5 bits for data, and the high bit as a continuation bit:
 
@@ -224,7 +259,7 @@ The length encoding uses the lower 5 bits for data, and the high bit as a contin
  * c = continuation bit
  * x = data
 
-When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
+While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
@@ -236,19 +271,19 @@ When the continuation bit is set to 1, the length field is continued in the next
 | 6          |   30 |               1073741823 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data**, not the encoded data or the length field itself.
+Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
 
 
 Whitespace
 ----------
 
-The length field may also be broken up using the same whitespace rules as for safe85.
+The length field may contain whitespace at any point in the stream, following the same rules as for safe85.
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence, one of two things will happen:
+Should truncation occur anywhere in the encoded sequence (length or data), one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
@@ -259,16 +294,14 @@ Examples
 
 | Length | Encoded Bits           | Length Field |
 | ------ | ---------------------- | ------------ |
-|      1 | `000001`               | `0`          |
-|     31 | `011111`               | `U`          |
-|     32 | `100001 000000`        | `W-`         |
-|   2000 | `100001 111110 010000` | `WyF`        |
+|      1 | `000001`               | `$`          |
+|     31 | `011111`               | `H`          |
+|     32 | `100001 000000`        | `J!`         |
+|   2000 | `100001 111110 010000` | `Jh6`        |
 
-Example: Length field & data:
+#### Example: Length field & data:
 
 Data:
-
-TODO:
 
     0x21, 0x7b, 0x01, 0x99, 0x3e, 0xd1, 0x7d, 0x3f,
     0x21, 0x8b, 0x39, 0x4c, 0x63, 0xc1, 0x88, 0x21,
@@ -278,16 +311,16 @@ TODO:
 
 Encoded:
 
-    W07Mg0aIvGUIwWXn_BNw577R57aM5abzW4_i50DPrB_bbN
+    J$0ja=a;60mK0lIG[I*8|Mh70U!_X!`XYRvJ]as!-_%W
 
-Where `W0` is the length field (33)
+In this case, the length field is `J$` (33)
 
 
 Advantages over base85 padding
 ------------------------------
 
  * No extra alphabet character is necessary. The length encodes using the exact same alphabet as the data encoding.
- * Truncation is always detected. With base85 padding, truncation on a 4-character boundary will not be detected.
+ * Truncation is always detected. With base85 padding, truncation on a 5-character boundary will not be detected.
  * Lower data usage for smaller data. base85's padding scheme uses an average of 2 characters no matter the length of the data. Safe85L uses only 1 byte for lengths 31 and under. By the time its size performance suffers in comparison to base85 (at length 1024), the character length difference is already less than 0.1% of the total payload size, and shrinks from there.
 
 

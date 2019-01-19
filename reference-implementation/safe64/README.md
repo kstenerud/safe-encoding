@@ -38,7 +38,7 @@ Note: Using C++ to make the string & data code simpler.
 ### Decoding
 
 ```c++
-    std::string my_source_data = "DG91sN3tqNgtI5DS07k";
+    std::string my_source_data = "DG91sN3tqNgtI5DS-HB";
 
     int64_t decoded_length = safe64_get_decoded_length(my_source_data.size());
     std::vector<unsigned char> decode_buffer(decoded_length);
@@ -58,7 +58,7 @@ Note: Using C++ to make the string & data code simpler.
 ### Decoding (with length field)
 
 ```c++
-    std::string my_source_data = "DDG91sN3tqNgtI5DS07k";
+    std::string my_source_data = "DDG91sN3tqNgtI5DS-HB";
 
     int64_t decoded_length = safe64_get_decoded_length(my_source_data.size());
     std::vector<unsigned char> decode_buffer(decoded_length);

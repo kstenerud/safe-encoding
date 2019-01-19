@@ -10,8 +10,9 @@ static const int g_bits_per_byte         = 8;
 static const int g_bits_per_chunk        = 5;
 static const int g_bits_per_length_chunk = 4;
 
-#define CHUNK_CODE_ERROR      0x7f
-#define CHUNK_CODE_WHITESPACE 0x7e
+#define CHUNK_CODE_ERROR      0xff
+#define CHUNK_CODE_WHITESPACE 0xfe
+#define CHUNK_FLAG_INVALID    0x80
 
 static const uint8_t g_encode_char_to_chunk[] =
 {
@@ -63,11 +64,7 @@ static const uint8_t g_chunk_to_encode_char[] =
 
 static const int g_chunk_to_byte_count[]   = { 0, 0, 1, 1, 2, 3, 3, 4, 5 };
 
-static const int g_chunk_size_to_padding[] = { 0, 0, 30, 0, 20, 15, 0, 5, 0 };
-
 static const int g_byte_to_chunk_count[]   = { 0, 2, 4, 5, 7, 8 };
-
-static const int g_byte_size_to_padding[]  = { 0, 32, 24, 16, 8, 0 };
 
 static inline int64_t accumulate_byte(const int64_t accumulator, const uint8_t byte_value)
 {
@@ -83,42 +80,23 @@ static inline int64_t accumulate_chunk(const int64_t accumulator, const uint8_t 
     return new_accumulator;
 }
 
-static inline int extract_byte_from_accumulator(const int64_t accumulator, const int byte_index_hi_first)
+static inline int extract_byte_from_accumulator(const int64_t accumulator, const int byte_index_lo_first)
 {
     const int byte_mask = (1 << g_bits_per_byte) - 1;
-    const int shift_amount = (g_bytes_per_group - byte_index_hi_first - 1) * g_bits_per_byte;
+    const int shift_amount = byte_index_lo_first * g_bits_per_byte;
     const int extracted_byte = (int)(accumulator >> shift_amount) & byte_mask;
-    KSLOG_DEBUG("Extract byte %d from %lx: %02x", byte_index_hi_first, accumulator, extracted_byte);
+    KSLOG_DEBUG("Extract byte %d from %lx: %02x", byte_index_lo_first, accumulator, extracted_byte);
     return extracted_byte;
 }
 
-static inline int extract_chunk_from_accumulator(const int64_t accumulator, const int chunk_index_hi_first)
+static inline int extract_chunk_from_accumulator(const int64_t accumulator, const int chunk_index_lo_first)
 {
     const int chunk_mask = (1 << g_bits_per_chunk) - 1;
-    const int shift_amount = (g_chunks_per_group - chunk_index_hi_first - 1) * g_bits_per_chunk;
+    const int shift_amount = chunk_index_lo_first * g_bits_per_chunk;
     const int extracted_chunk = (int)(accumulator >> shift_amount) & chunk_mask;
-    KSLOG_DEBUG("Extract chunk %d from %lx: %02x (%c)", chunk_index_hi_first, accumulator, extracted_chunk,
+    KSLOG_DEBUG("Extract chunk %d from %lx: %02x (%c)", chunk_index_lo_first, accumulator, extracted_chunk,
         g_chunk_to_encode_char[extracted_chunk]);
     return extracted_chunk;
-}
-
-static inline int64_t pad_accumulator_for_decoded_byte_count(const int64_t accumulator, const int decoded_byte_count)
-{
-    const int padding_bits = g_byte_size_to_padding[decoded_byte_count];
-    const int64_t new_accumulator = accumulator << padding_bits;
-    KSLOG_DEBUG("Padding %d bits for %d bytes. Accumulator now = %lx", padding_bits,
-        decoded_byte_count, new_accumulator);
-    return new_accumulator;
-}
-
-static inline int64_t pad_accumulator_for_encoded_chunk_count(const int64_t accumulator, const int encoded_chunk_count)
-{
-    const int padding_bits = g_chunk_size_to_padding[encoded_chunk_count];
-    const int64_t new_accumulator = accumulator << padding_bits;
-    KSLOG_DEBUG("Padding %d bits for %d chunks. Accumulator now = %lx", padding_bits,
-        encoded_chunk_count, new_accumulator);
-    return new_accumulator;
-
 }
 
 
@@ -187,7 +165,7 @@ safe32_status safe32_decode_feed(const uint8_t** const src_buffer_ptr,
     { \
         const int bytes_to_write = g_chunk_to_byte_count[CHUNK_COUNT]; \
         KSLOG_DEBUG("Writing %d chunks as %d decoded bytes", CHUNK_COUNT, bytes_to_write); \
-        for(int i = 0; i < bytes_to_write; i++) \
+        for(int i = bytes_to_write - 1; i >= 0; i--) \
         { \
             *dst++ = extract_byte_from_accumulator(accumulator, i); \
             KSLOG_DEBUG("Wrote byte %02x to index %d", dst[-1], i); \
@@ -245,18 +223,18 @@ safe32_status safe32_decode_feed(const uint8_t** const src_buffer_ptr,
 
     if(current_group_chunk_count > 0 && (src_is_at_end || dst_is_at_end))
     {
-        accumulator = pad_accumulator_for_encoded_chunk_count(accumulator, current_group_chunk_count);
+        KSLOG_DEBUG("End of stream. Writing remaining chunks");
         WRITE_BYTES(current_group_chunk_count);
         last_src = src;
         dst_is_at_end = (stream_state & SAFE32_DST_IS_AT_END_OF_STREAM) && dst + g_chunk_to_byte_count[current_group_chunk_count] >= dst_end;
     }
 
+    KSLOG_DEBUG("At end of feed. processed %d src bytes and %d dst bytes",
+        last_src - *src_buffer_ptr, dst - *dst_buffer_ptr);
+
     *src_buffer_ptr = last_src;
     *dst_buffer_ptr = dst;
 
-    KSLOG_DEBUG("stream_state %d, src>end %d, dst>end %d", stream_state, src >= src_end, dst >= dst_end);
-    KSLOG_TRACE("src %p %p, dst %p %p", src, src_end, dst, dst_end);
-    KSLOG_DEBUG("src_is_at_end %d, dst_is_at_end %d", src_is_at_end, dst_is_at_end);
     if(src_is_at_end || dst_is_at_end)
     {
         if(stream_state & SAFE32_EXPECT_DST_STREAM_TO_END)
@@ -302,6 +280,7 @@ int64_t safe32_read_length_field(const uint8_t* const buffer,
         return SAFE32_ERROR_INVALID_LENGTH;
     }
     const int continuation_bit = 1 << g_bits_per_length_chunk;
+    const int max_chunk_value = continuation_bit - 1;
     const int chunk_mask = continuation_bit - 1;
     KSLOG_DEBUG("bits %d, continue %02x, mask %02x",
                 g_bits_per_length_chunk, continuation_bit, chunk_mask);
@@ -314,6 +293,17 @@ int64_t safe32_read_length_field(const uint8_t* const buffer,
     while(src < buffer_end)
     {
         next_chunk = g_encode_char_to_chunk[(int)*src];
+        if(next_chunk == CHUNK_CODE_WHITESPACE)
+        {
+            src++;
+            continue;
+        }
+        const int chunk_value = next_chunk & ~continuation_bit;
+        if(chunk_value > max_chunk_value)
+        {
+            KSLOG_DEBUG("Error: Invalid length character: [%c]", *src);
+            return SAFE32_ERROR_INVALID_SOURCE_DATA;
+        }
         value = (value << g_bits_per_length_chunk) | (next_chunk & chunk_mask);
         KSLOG_DEBUG("Chunk %d: '%c' (%d), continue %d, value portion = %d",
                     src - buffer, *src, next_chunk, next_chunk & continuation_bit,
@@ -359,7 +349,9 @@ int64_t safe32_decode(const uint8_t* const src_buffer,
         }
         return status;
     }
-    return dst - dst_buffer;
+    uint64_t decoded_byte_count = dst - dst_buffer;
+    KSLOG_DEBUG("Decoded %d bytes", decoded_byte_count);
+    return decoded_byte_count;
 }
 
 int64_t safe32l_decode(const uint8_t* const src_buffer,
@@ -371,18 +363,14 @@ int64_t safe32l_decode(const uint8_t* const src_buffer,
     {
         return SAFE32_ERROR_INVALID_LENGTH;
     }
-    uint64_t length = 0;
-    const int64_t bytes_used = safe32_read_length_field(src_buffer, src_length, &length);
+    KSLOG_DEBUG("Decode with src buffer length %ld, dst buffer length %d", src_length, dst_length);
+    uint64_t specified_length = 0;
+    const int64_t bytes_used = safe32_read_length_field(src_buffer, src_length, &specified_length);
     if(bytes_used < 0)
     {
         return bytes_used;
     }
-    if(length > (uint64_t)(src_length - bytes_used))
-    {
-        KSLOG_DEBUG("Require %d bytes but only %d available", length, src_length - bytes_used);
-        return SAFE32_ERROR_TRUNCATED_DATA;
-    }
-    KSLOG_DEBUG("Used %d bytes", bytes_used);
+    KSLOG_DEBUG("Used %ld bytes to read expected length of %lu", bytes_used, specified_length);
     const int64_t read_length = src_length - bytes_used;
     const uint8_t* src = src_buffer + bytes_used;
     uint8_t* dst = dst_buffer;
@@ -390,17 +378,28 @@ int64_t safe32l_decode(const uint8_t* const src_buffer,
                                     &src,
                                     read_length,
                                     &dst,
-                                    dst_length,
-                                    SAFE32_SRC_IS_AT_END_OF_STREAM | SAFE32_DST_IS_AT_END_OF_STREAM);
+                                    specified_length,
+                                    SAFE32_SRC_IS_AT_END_OF_STREAM |
+                                    SAFE32_DST_IS_AT_END_OF_STREAM |
+                                    SAFE32_EXPECT_DST_STREAM_TO_END);
     if(status != SAFE32_STATUS_OK)
     {
         if(status == SAFE32_STATUS_PARTIALLY_COMPLETE)
         {
+            KSLOG_DEBUG("Error: Partially complete, but expected complete");
             return SAFE32_ERROR_NOT_ENOUGH_ROOM;
         }
         return status;
     }
-    return dst - dst_buffer;
+    uint64_t decoded_byte_count = dst - dst_buffer;
+    if(decoded_byte_count < specified_length)
+    {
+        KSLOG_DEBUG("Error: Expected to decode %lu bytes, but only decoded %lu bytes",
+            specified_length, decoded_byte_count);
+        return SAFE32_ERROR_TRUNCATED_DATA;
+    }
+    KSLOG_DEBUG("Decoded %d bytes", decoded_byte_count);
+    return decoded_byte_count;
 }
 
 int64_t safe32_get_encoded_length(const int64_t decoded_length,
@@ -423,50 +422,50 @@ int64_t safe32_get_encoded_length(const int64_t decoded_length,
     return group_count * g_chunks_per_group + chunk_count + length_chunk_count;
 }
 
-safe32_status safe32_encode_feed(const uint8_t** const dst_buffer_ptr,
-                                 const int64_t dst_length,
-                                 uint8_t** const src_buffer_ptr,
+safe32_status safe32_encode_feed(const uint8_t** const src_buffer_ptr,
                                  const int64_t src_length,
+                                 uint8_t** const dst_buffer_ptr,
+                                 const int64_t dst_length,
                                  const bool is_end_of_data)
 {
-    if(dst_length < 0 || src_length < 0)
+    if(src_length < 0 || dst_length < 0)
     {
         return SAFE32_ERROR_INVALID_LENGTH;
     }
-    const uint8_t* dst = *dst_buffer_ptr;
-    uint8_t* src = *src_buffer_ptr;
+    const uint8_t* src = *src_buffer_ptr;
+    uint8_t* dst = *dst_buffer_ptr;
 
-    const uint8_t* const dst_end = dst + dst_length;
     const uint8_t* const src_end = src + src_length;
+    const uint8_t* const dst_end = dst + dst_length;
 
     KSLOG_DEBUG("Encode %d bytes into %d encoded chars, ending %d",
-                dst_end - dst, src_end - src, is_end_of_data);
+                src_end - src, dst_end - dst, is_end_of_data);
 
     #define WRITE_CHUNKS(DEC_BYTE_COUNT) \
     { \
         int chunks_to_write = g_byte_to_chunk_count[DEC_BYTE_COUNT]; \
         KSLOG_DEBUG("Writing %d bytes of %lx as %d chunks", DEC_BYTE_COUNT, accumulator, chunks_to_write); \
-        if(src + chunks_to_write > src_end) \
+        if(dst + chunks_to_write > dst_end) \
         { \
-            KSLOG_DEBUG("Error: Need %d chars but only %d available", chunks_to_write, src_end - src); \
-            *dst_buffer_ptr = last_dst; \
-            *src_buffer_ptr = src; \
+            KSLOG_DEBUG("Error: Need %d chars but only %d available", chunks_to_write, dst_end - dst); \
+            *src_buffer_ptr = last_src; \
+            *dst_buffer_ptr = dst; \
             return SAFE32_STATUS_PARTIALLY_COMPLETE; \
         } \
-        for(int i = 0; i < chunks_to_write; i++) \
+        for(int i = chunks_to_write - 1; i >= 0; i--) \
         { \
-            *src++ = g_chunk_to_encode_char[extract_chunk_from_accumulator(accumulator, i)]; \
-            KSLOG_DEBUG("Wrote chunk %c to index %d", src[-1], i); \
+            *dst++ = g_chunk_to_encode_char[extract_chunk_from_accumulator(accumulator, i)]; \
+            KSLOG_DEBUG("Wrote chunk %c to index %d", dst[-1], i); \
         } \
     }
 
-    const uint8_t* last_dst = dst;
+    const uint8_t* last_src = src;
     int current_group_byte_count = 0;
     int64_t accumulator = 0;
 
-    while(dst < dst_end)
+    while(src < src_end)
     {
-        const uint8_t next_byte = *dst++;
+        const uint8_t next_byte = *src++;
         accumulator = accumulate_byte(accumulator, next_byte);
         current_group_byte_count++;
         KSLOG_DEBUG("Accumulated byte %d of %d", current_group_byte_count, g_bytes_per_group);
@@ -475,7 +474,7 @@ safe32_status safe32_encode_feed(const uint8_t** const dst_buffer_ptr,
             WRITE_CHUNKS(current_group_byte_count);
             current_group_byte_count = 0;
             accumulator = 0;
-            last_dst = dst;
+            last_src = src;
         }
     }
 
@@ -483,28 +482,29 @@ safe32_status safe32_encode_feed(const uint8_t** const dst_buffer_ptr,
     {
         if(is_end_of_data)
         {
-            accumulator = pad_accumulator_for_decoded_byte_count(accumulator, current_group_byte_count);
+            KSLOG_DEBUG("End of stream. Writing remaining bytes");
             WRITE_CHUNKS(current_group_byte_count);
         }
         else
         {
-            dst -= current_group_byte_count;
+            KSLOG_DEBUG("End of buffer. Not processing remaining bytes");
+            src -= current_group_byte_count;
         }
-        last_dst = dst;
+        last_src = src;
     }
 
-    *dst_buffer_ptr = last_dst;
-    *src_buffer_ptr = src;
+    *src_buffer_ptr = last_src;
+    *dst_buffer_ptr = dst;
 
     return SAFE32_STATUS_OK;
 #undef WRITE_CHUNKS
 }
 
 int64_t safe32_write_length_field(const uint64_t length,
-                                  uint8_t* const src_buffer,
-                                  const int64_t src_buffer_length)
+                                  uint8_t* const dst_buffer,
+                                  const int64_t dst_buffer_length)
 {
-    if(src_buffer_length < 0)
+    if(dst_buffer_length < 0)
     {
         return SAFE32_ERROR_INVALID_LENGTH;
     }
@@ -522,37 +522,37 @@ int64_t safe32_write_length_field(const uint64_t length,
     }
     KSLOG_DEBUG("Value: %lu, chunk count %d", length, chunk_count);
 
-    if(chunk_count > src_buffer_length)
+    if(chunk_count > dst_buffer_length)
     {
-        KSLOG_DEBUG("Error: Require %d bytes but only %d available", chunk_count, src_buffer_length);
+        KSLOG_DEBUG("Error: Require %d bytes but only %d available", chunk_count, dst_buffer_length);
         return SAFE32_ERROR_NOT_ENOUGH_ROOM;
     }
 
-    uint8_t* src = src_buffer;
+    uint8_t* dst = dst_buffer;
     for(int shift_amount = chunk_count - 1; shift_amount >= 0; shift_amount--)
     {
         const int should_continue = (shift_amount == 0) ? 0 : continuation_bit;
         const int chunk_value = ((length>>(g_bits_per_length_chunk * shift_amount)) & chunk_mask) + should_continue;
         const uint8_t next_char = g_chunk_to_encode_char[chunk_value];
-        *src++ = next_char;
+        *dst++ = next_char;
         KSLOG_DEBUG("Chunk %d: '%c' (%d), continue %d", shift_amount, next_char,
                     ((length>>(g_bits_per_length_chunk * shift_amount)) & chunk_mask), should_continue);
     }
     return chunk_count;
 }
 
-int64_t safe32_encode(const uint8_t* const dst_buffer,
-                      const int64_t dst_length,
-                      uint8_t* const src_buffer,
-                      const int64_t src_length)
+int64_t safe32_encode(const uint8_t* const src_buffer,
+                      const int64_t src_length,
+                      uint8_t* const dst_buffer,
+                      const int64_t dst_length)
 {
-    if(dst_length < 0 || src_length < 0)
+    if(src_length < 0 || dst_length < 0)
     {
         return SAFE32_ERROR_INVALID_LENGTH;
     }
-    const uint8_t* dst = dst_buffer;
-    uint8_t* src = src_buffer;
-    const safe32_status status = safe32_encode_feed(&dst, dst_length, &src, src_length, true);
+    const uint8_t* src = src_buffer;
+    uint8_t* dst = dst_buffer;
+    const safe32_status status = safe32_encode_feed(&src, src_length, &dst, dst_length, true);
     if(status != SAFE32_STATUS_OK)
     {
         if(status == SAFE32_STATUS_PARTIALLY_COMPLETE)
@@ -561,27 +561,27 @@ int64_t safe32_encode(const uint8_t* const dst_buffer,
         }
         return status;
     }
-    return src - src_buffer;
+    return dst - dst_buffer;
 }
 
-int64_t safe32l_encode(const uint8_t* const dst_buffer,
-                       const int64_t dst_length,
-                       uint8_t* const src_buffer,
-                       const int64_t src_length)
+int64_t safe32l_encode(const uint8_t* const src_buffer,
+                       const int64_t src_length,
+                       uint8_t* const dst_buffer,
+                       const int64_t dst_length)
 {
-    if(dst_length < 0 || src_length < 0)
+    if(src_length < 0 || dst_length < 0)
     {
         return SAFE32_ERROR_INVALID_LENGTH;
     }
-    int64_t bytes_used = safe32_write_length_field(dst_length, src_buffer, src_length);
+    int64_t bytes_used = safe32_write_length_field(src_length, dst_buffer, dst_length);
     if(bytes_used < 0)
     {
         return bytes_used;
     }
 
-    const uint8_t* dst = dst_buffer;
-    uint8_t* src = src_buffer + bytes_used;
-    safe32_status status = safe32_encode_feed(&dst, dst_length, &src, src_length, true);
+    const uint8_t* src = src_buffer;
+    uint8_t* dst = dst_buffer + bytes_used;
+    safe32_status status = safe32_encode_feed(&src, src_length, &dst, dst_length, true);
     if(status != SAFE32_STATUS_OK)
     {
         if(status == SAFE32_STATUS_PARTIALLY_COMPLETE)
@@ -590,5 +590,5 @@ int64_t safe32l_encode(const uint8_t* const dst_buffer,
         }
         return status;
     }
-    return src - src_buffer;
+    return dst - dst_buffer;
 }

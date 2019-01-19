@@ -177,8 +177,8 @@ Encoded:
 Where `j0` is the length field (16)
 
 
-Advantages over base16 padding
-------------------------------
+Advantages over base16
+----------------------
 
  * Truncation is detected. With base16, there is no truncation detection.
 

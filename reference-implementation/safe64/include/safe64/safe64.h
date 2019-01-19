@@ -264,10 +264,10 @@ int64_t safe64_read_length_field(const uint8_t* buffer,
  * @param is_end_of_data If true, this is the last packet of data to decode.
  * @return Status code indicating the result of the operation.
  */
-safe64_status safe64_decode_feed(const uint8_t** enc_buffer_ptr,
-                                 int64_t enc_length,
-                                 uint8_t** dec_buffer_ptr,
-                                 int64_t dec_length,
+safe64_status safe64_decode_feed(const uint8_t** src_buffer_ptr,
+                                 int64_t src_length,
+                                 uint8_t** dst_buffer_ptr,
+                                 int64_t dst_length,
                                  safe64_stream_state stream_state);
 
 /**

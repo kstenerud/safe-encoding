@@ -74,8 +74,12 @@ void assert_encode_decode_with_length(std::string expected_encoded, std::vector<
     ASSERT_EQ(expected_decoded, actual_decoded);
 }
 
-void assert_encode_decode_with_length_status(std::string expected_encoded, int64_t force_length, int64_t expected_status)
+void assert_decode_with_length_status(std::string expected_encoded, int64_t force_length, int64_t expected_status)
 {
+    if(force_length < 0)
+    {
+        force_length = expected_encoded.size();
+    }
     std::vector<uint8_t> decode_buffer(1000);
     int64_t actual_decode_used_bytes = safe32l_decode((uint8_t*)expected_encoded.data(),
                                                       force_length,
@@ -280,7 +284,7 @@ void assert_decode_length(std::string encoded, uint64_t expected_length, int64_t
     uint64_t actual_length;
     int64_t actual_status = safe32_read_length_field((uint8_t*)encoded.data(), encoded.size(), &actual_length);
     ASSERT_EQ(expected_status, actual_status);
-    if(expected_status == SAFE32_STATUS_OK)
+    if(expected_status >= 0)
     {
         ASSERT_EQ(expected_length, actual_length);
     }
@@ -317,7 +321,7 @@ TEST(DecodeLength, NAME) { assert_decode_length(ENCODED, EXPECTED_LENGTH, EXPECT
 TEST(EncodeDecodeLength, NAME) { assert_encode_decode_length(START_LENGTH, END_LENGTH); }
 
 #define TEST_DECODE_WITH_LENGTH_STATUS(NAME, ENCODED, FORCE_LENGTH, EXPECTED_STATUS) \
-TEST(DecodeLength, NAME) { assert_encode_decode_with_length_status(ENCODED, FORCE_LENGTH, EXPECTED_STATUS); }
+TEST(DecodeLength, NAME) { assert_decode_with_length_status(ENCODED, FORCE_LENGTH, EXPECTED_STATUS); }
 
 
 // -----
@@ -331,16 +335,16 @@ TEST(Library, version)
     ASSERT_STREQ(expected, actual);
 }
 
-TEST_ENCODE_DECODE(_1_byte,  "y5",       {0xf1})
-TEST_ENCODE_DECODE(_2_bytes, "6udh",     {0x2e, 0x99})
-TEST_ENCODE_DECODE(_3_bytes, "y9u6d",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE(_4_bytes, "ab5ctn9",  {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE(_1_byte,  "8j",       {0xf1})
+TEST_ENCODE_DECODE(_2_bytes, "0cnt",     {0x2e, 0x99})
+TEST_ENCODE_DECODE(_3_bytes, "g5e3q",    {0xf2, 0x34, 0x56})
+TEST_ENCODE_DECODE(_4_bytes, "269jg7j",  {0x4a, 0x88, 0xbc, 0xd1})
 TEST_ENCODE_DECODE(_5_bytes, "zxsxufnk", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_ENCODE_DECODE_WITH_LENGTH(_1_byte,  "2y5",       {0xf1})
-TEST_ENCODE_DECODE_WITH_LENGTH(_2_bytes, "36udh",     {0x2e, 0x99})
-TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, "4y9u6d",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, "5ab5ctn9",  {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE_WITH_LENGTH(_1_byte,  "28j",       {0xf1})
+TEST_ENCODE_DECODE_WITH_LENGTH(_2_bytes, "30cnt",     {0x2e, 0x99})
+TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, "4g5e3q",    {0xf2, 0x34, 0x56})
+TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, "5269jg7j",  {0x4a, 0x88, 0xbc, 0xd1})
 TEST_ENCODE_DECODE_WITH_LENGTH(_5_bytes, "6zxsxufnk", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
 TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "zxsxufnk", SAFE32_ERROR_NOT_ENOUGH_ROOM)
@@ -422,28 +426,69 @@ TEST_DECODE_LENGTH(_16,       "j0",    16, 2)
 TEST_DECODE_LENGTH(_256_bad,  "jh",   256, SAFE32_ERROR_UNTERMINATED_LENGTH_FIELD)
 TEST_DECODE_LENGTH(_256,      "jh0",  256, 3)
 
-TEST_DECODE(substitution, "oO3ANDS", {0x00, 0x04, 0x9a, 0x33})
+TEST_DECODE_WITH_LENGTH_STATUS(_continues_beyond_end, "28jzxsxufnk", -1, 1)
+TEST_DECODE_WITH_LENGTH_STATUS(_longer_than_end, "9zxsxufnk", -1, SAFE32_ERROR_TRUNCATED_DATA)
+TEST_DECODE_WITH_LENGTH_STATUS(_no_data,  "2", -1, SAFE32_ERROR_TRUNCATED_DATA)
+TEST_DECODE_WITH_LENGTH_STATUS(_invalid, "[8j", -1, SAFE32_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_WITH_LENGTH_STATUS(_whitespace, " j 0 5 89rugt2s75akwb6kuqwt6mt7s", -1, 16)
 
-TEST_DECODE_WITH_LENGTH_STATUS(_x,  "j0589rugt2s75akwb6kuqwt6mtv0", 15, SAFE32_ERROR_TRUNCATED_DATA)
+TEST_DECODE(substitution, "0oOa7jm", {0x00, 0x04, 0x9a, 0x33})
+
+TEST(Length, invalid)
+{
+    std::vector<uint8_t> encoded_data(100);
+    std::vector<uint8_t> decoded_data(100);
+
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_get_decoded_length(-1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_decode(encoded_data.data(), -1, decoded_data.data(), 1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_decode(encoded_data.data(), 1, decoded_data.data(), -1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32l_decode(encoded_data.data(), -1, decoded_data.data(), 1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32l_decode(encoded_data.data(), 1, decoded_data.data(), -1));
+
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_get_encoded_length(-1, false));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_get_encoded_length(-1, true));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_encode(decoded_data.data(), -1, encoded_data.data(), 1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_encode(decoded_data.data(), 1, encoded_data.data(), -1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32l_encode(decoded_data.data(), -1, encoded_data.data(), 1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32l_encode(decoded_data.data(), 1, encoded_data.data(), -1));
+
+    uint64_t length = 0;
+    uint8_t* encoded_ptr = (uint8_t*)encoded_data.data();
+    const uint8_t* const_encoded_ptr = encoded_ptr;
+    uint8_t* decoded_ptr = decoded_data.data();
+    const uint8_t* const_decoded_ptr = decoded_ptr;
+
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_read_length_field((uint8_t*)encoded_data.data(), -1, &length));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_decode_feed(&const_encoded_ptr, -1, &decoded_ptr, 1, SAFE32_STREAM_STATE_NONE));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_decode_feed(&const_encoded_ptr, 1, &decoded_ptr, -1, SAFE32_STREAM_STATE_NONE));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_decode_feed(&const_encoded_ptr, -1, &decoded_ptr, 1, SAFE32_SRC_IS_AT_END_OF_STREAM));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_decode_feed(&const_encoded_ptr, 1, &decoded_ptr, -1, SAFE32_SRC_IS_AT_END_OF_STREAM));
+
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_write_length_field(1, (uint8_t*)encoded_data.data(), -1));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_encode_feed(&const_decoded_ptr, -1, &encoded_ptr, 1, false));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_encode_feed(&const_decoded_ptr, 1, &encoded_ptr, -1, false));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_encode_feed(&const_decoded_ptr, -1, &encoded_ptr, 1, true));
+    ASSERT_EQ(SAFE32_ERROR_INVALID_LENGTH, safe32_encode_feed(&const_decoded_ptr, 1, &encoded_ptr, -1, true));
+}
 
 
 
 // // Specification Examples:
 
-TEST_ENCODE_DECODE(example_1, "85a96sd288dsqfbddffha40", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
+TEST_ENCODE_DECODE(example_1, "85a96sd288dsqfbd2jtu25d", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
 TEST_ENCODE_DECODE(example_2, "wsabe8zs82qrq0dt8tq67yv0", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-TEST_ENCODE_DECODE(example_3, "589rugt2s75akwb6kuqwt6mtv0", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+TEST_ENCODE_DECODE(example_3, "589rugt2s75akwb6kuqwt6mt7s", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
 TEST_DECODE(example_dash, "85a9-6sd2-88ds-qfbd", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c})
-TEST_DECODE_LENGTH(example_1,    "0",      1, 1)
+TEST_DECODE_LENGTH(example_1,    "2",      1, 1)
 TEST_DECODE_LENGTH(example_31,   "g",     15, 1)
 TEST_DECODE_LENGTH(example_32,   "j0",    16, 2)
 TEST_DECODE_LENGTH(example_2000, "rx0", 2000, 3)
-TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "j0589rugt2s75akwb6kuqwt6mtv0", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "j0589rugt2s75akwb6kuqwt6mt7s", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
 
 
 // README Examples:
 
-static void my_receive_decoded_data_function(std::vector<unsigned char>& data)
+static void my_receive_decoded_data_function(std::vector<uint8_t>& data)
 {
     (void)data;
 }
@@ -454,10 +499,10 @@ static void my_receive_encoded_data_function(std::string& data)
 
 TEST(Example, decoding)
 {
-    std::string my_source_data = "85a96sd288dsqfbddffha40";
+    std::string my_source_data = "85a96sd288dsqfbd2jtu25d";
 
     int64_t decoded_length = safe32_get_decoded_length(my_source_data.size());
-    std::vector<unsigned char> decode_buffer(decoded_length);
+    std::vector<uint8_t> decode_buffer(decoded_length);
 
     int64_t used_bytes = safe32_decode((uint8_t*)my_source_data.data(),
                                        my_source_data.size(),
@@ -468,16 +513,16 @@ TEST(Example, decoding)
         // TODO: used_bytes is an error code.
         ASSERT_TRUE(false);
     }
-    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    std::vector<uint8_t> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
     my_receive_decoded_data_function(decoded_data);
 }
 
 TEST(Example, decoding_with_length)
 {
-    std::string my_source_data = "f85a96sd288dsqfbddffha40";
+    std::string my_source_data = "f85a96sd288dsqfbd2jtu25d";
 
     int64_t decoded_length = safe32_get_decoded_length(my_source_data.size());
-    std::vector<unsigned char> decode_buffer(decoded_length);
+    std::vector<uint8_t> decode_buffer(decoded_length);
 
     int64_t used_bytes = safe32l_decode((uint8_t*)my_source_data.data(),
                                         my_source_data.size(),
@@ -488,13 +533,13 @@ TEST(Example, decoding_with_length)
         // TODO: used_bytes is an error code.
         ASSERT_TRUE(false);
     }
-    std::vector<unsigned char> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
+    std::vector<uint8_t> decoded_data(decode_buffer.begin(), decode_buffer.begin() + used_bytes);
     my_receive_decoded_data_function(decoded_data);
 }
 
 TEST(Example, encoding)
 {
-    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+    std::vector<uint8_t> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 
     bool should_include_length = false;
     int64_t encoded_length = safe32_get_encoded_length(my_source_data.size(), should_include_length);
@@ -515,7 +560,7 @@ TEST(Example, encoding)
 
 TEST(Example, encoding_with_length)
 {
-    std::vector<unsigned char> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
+    std::vector<uint8_t> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 
     bool should_include_length = true;
     int64_t encoded_length = safe32_get_encoded_length(my_source_data.size(), should_include_length);

@@ -1,22 +1,18 @@
 Safe32 Encoding
 ===============
 
-Safe32 provides a binary data encoding scheme that is safe to be input by humans, and safe to be passed through processing systems that expect human readable text.
-
-It is especially useful for things requiring human input such as activation codes.
+Safe32 is a binary data encoding scheme that is safe to be passed through processing systems expecting human readable text.
 
 ### Features:
 
- * Safe for use in JSON, SGML formats, source code strings, without escaping
- * Safe for use in URLs without escaping
+ * Safe for use in JSON, SGML formats, source code string literals, URLs, without escaping
  * Safe for use in filenames
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
- * Support for length fields
+ * Alternate Form with Support for length fields
  * Useful for human input situations such as activation codes.
  * Easily confusable characters & digits are interchangeable.
  * Uppercase and lowercase characters are interchangeable.
- * Alternate form with prefixed length
 
 ### Advantages over base32:
 
@@ -32,26 +28,88 @@ It is especially useful for things requiring human input such as activation code
 Encoding
 --------
 
-Safe64 encoding uses an alphabet of 32 characters from the single-byte UTF-8 set to represent 5-bit values. These characters are grouped together by 8 (forming 40 bits), which can then be used to encode 5 bytes of data per group. This multiplies the size of the encoded data by a factor of 1.6.
+Safe32 encoding uses an alphabet of 32 characters from the single-byte printable UTF-8 set to represent radix-32 chunks (where each chunk has an individual value from 0 - 31). These chunks are grouped magnitudally into big-endian sequences of 8 chunks, giving a range of 32^8 = 1099511628000 (0x10000000000), which allows 40 bits (5 bytes) of data storage per group. Such an ecoding scheme multiplies the size of the data by a factor of 1.6.
 
-    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd] [eeeeeeee]
-    Encoded:  [aaaaa] [aaabb] [bbbbb] [bcccc] [ccccd] [ddddd] [ddeee] [eeeee]
+Layout:
 
-When there are less than 5 bytes of source data remaining, a partial group is created, with unused bits set to 0:
+    Bytes:  [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd] [eeeeeeee]
+    Chunks: [aaaaa] [aaabb] [bbbbb] [bcccc] [ccccd] [ddddd] [ddeee] [eeeee]
 
-    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd]
-    Encoded:  [aaaaa] [aaabb] [bbbbb] [bcccc] [ccccd] [ddddd] [dd000]
 
-    Original: [aaaaaaaa] [bbbbbbbb] [cccccccc]
-    Encoded:  [aaaaa] [aaabb] [bbbbb] [bcccc] [cccc0]
+### Encoding Process
 
-    Original: [aaaaaaaa] [bbbbbbbb]
-    Encoded:  [aaaaa] [aaabb] [bbbbb] [b0000]
+The encoding process encodes groups of 5 bytes, outputting 8 chunks per group. If the source data length is not a multiple of 5, then the final group is output as a partial group, using only as many chunks as is necessary to encode the remaining bytes, with the unused high portion of the highest chunk cleared.
 
-    Original: [aaaaaaaa]
-    Encoded:  [aaaaa] [aaa00]
+#### 5 Byte Full Group
 
-The 5-bit alphabet, chosen for safety in known text systems, and ease of human input:
+First, an accumulator is filled big-endian style with 5 bytes of data:
+
+    accumulator = (bytes[0] << 32) | (bytes[1] << 24) | (bytes[2] << 16) | (bytes[3] << 8) | bytes[4]
+
+Next, the accumulator is broken down big-endian style into radix-32 chunks:
+
+    chunk[0] = (accumulator >> 35) & 0x1f
+    chunk[1] = (accumulator >> 30) & 0x1f
+    chunk[2] = (accumulator >> 25) & 0x1f
+    chunk[3] = (accumulator >> 20) & 0x1f
+    chunk[4] = (accumulator >> 15) & 0x1f
+    chunk[5] = (accumulator >> 10) & 0x1f
+    chunk[6] = (accumulator >> 5) & 0x1f
+    chunk[7] = accumulator & 0x1f
+
+| Chunk 0 | Chunk 1 | Chunk 2 | Chunk 3 | Chunk 4 | Chunk 5 | Chunk 6 | Chunk 7 |
+| ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| 0 - 31  | 0 - 31  | 0 - 31  | 0 - 31  | 0 - 31  | 0 - 31  | 0 - 31  | 0 - 31  |
+
+#### 4 Byte Partial Group
+
+    Bytes:  [aaaaaaaa] [bbbbbbbb] [cccccccc] [dddddddd]
+    Chunks: [000aa] [aaaaa] [abbbb] [bbbbc] [ccccc] [ccddd] [ddddd]
+
+    accumulator = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]
+    chunk[0] = (accumulator >> 30) & 0x1f
+    chunk[1] = (accumulator >> 25) & 0x1f
+    chunk[2] = (accumulator >> 20) & 0x1f
+    chunk[3] = (accumulator >> 15) & 0x1f
+    chunk[4] = (accumulator >> 10) & 0x1f
+    chunk[5] = (accumulator >> 5) & 0x1f
+    chunk[6] = accumulator & 0x1f
+
+#### 3 Byte Partial Group
+
+    Bytes:  [aaaaaaaa] [bbbbbbbb] [cccccccc]
+    Chunks: [0aaaa] [aaaab] [bbbbb] [bbccc] [ccccc]
+
+    accumulator = (bytes[0] << 16) | (bytes[1] << 8) | bytes[2]
+    chunk[0] = (accumulator >> 20) & 0x1f
+    chunk[1] = (accumulator >> 15) & 0x1f
+    chunk[2] = (accumulator >> 10) & 0x1f
+    chunk[3] = (accumulator >> 5) & 0x1f
+    chunk[4] = accumulator & 0x1f
+
+#### 2 Byte Partial Group
+
+    Bytes:  [aaaaaaaa] [bbbbbbbb]
+    Chunks: [0000a] [aaaaa] [aabbb] [bbbbb]
+
+    accumulator = (bytes[0] << 8) | bytes[1]
+    chunk[0] = (accumulator >> 15) & 0x1f
+    chunk[1] = (accumulator >> 10) & 0x1f
+    chunk[2] = (accumulator >> 5) & 0x1f
+    chunk[3] = accumulator & 0x1f
+
+#### 1 Byte Partial Group
+
+    Bytes:  [aaaaaaaa]
+    Chunks: [00aaa] [aaaaa]
+
+    accumulator = bytes[0]
+    chunk[0] = (accumulator >> 5) & 0x1f
+    chunk[1] = accumulator & 0x1f
+
+#### Alphabet
+
+Once the chunk values have been determined, they are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- |
@@ -74,22 +132,11 @@ The 5-bit alphabet, chosen for safety in known text systems, and ease of human i
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
-In order to make human input less error-prone, the following substitutions are allowed in the encoded text:
-
- * Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`).
- * `o` and `O` may be substituted for `0`.
-
-A human may input substitutes. A decoder must accept substitutes. An encoder must not output substitutes.
-
 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace as needed by the medium it will be transferred across. For example, some mediums may have a maximum line length, or require indentation.
-
-For human input, it may be helpful to break up long sequences into shorter chunks using whitespace to make the sequence easier to input without losing your place.
-
-It is up to the encoder or human to decide when and how whitespace will occur. Whitespace may occur at any point in the data stream. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -109,7 +156,7 @@ Note: Dash is included as "whitespace" to allow human input sequences such as:
 Termination
 -----------
 
-In the last (possibly partial) group, the number of characters indicates how many bytes of data remain to be decoded:
+In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded:
 
 | Characters | Remaining Bytes |
 | ---------- | --------------- |
@@ -122,22 +169,18 @@ In the last (possibly partial) group, the number of characters indicates how man
 | 7          | 4               |
 | 8          | 5               |
 
-Notes:
-
- * Excess bits in partial groups must be set to 0, and must be discarded by the decoder.
-
 
 Examples
 --------
 
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: 85a96sd288dsqfbddffha40
+    Encoded: 85a96sd288dsqfbd2jtu25d
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
     Encoded: wsabe8zs82qrq0dt8tq67yv0
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 589rugt2s75akwb6kuqwt6mtv0
+    Encoded: 589rugt2s75akwb6kuqwt6mt7s
 
 ------------------------------------------------------------------------------
 
@@ -154,7 +197,7 @@ Encoding
 
 Safe32L works essentially the same as safe32, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
 
-The length encoding uses the lower 4 bits for data, and the high bit as a continuation bit:
+The length encoding uses the lower 5 bits for data, and the high bit as a continuation bit:
 
 | Bit Position | 4 | 3 | 2 | 1 | 0 |
 | ------------ | - | - | - | - | - |
@@ -163,7 +206,7 @@ The length encoding uses the lower 4 bits for data, and the high bit as a contin
  * c = continuation bit
  * x = data
 
-When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 4 bit chunks are interpreted in big endian order (the first character represents the highest 4 bits, then the next lower 4 bits, and so on).
+While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
@@ -175,19 +218,19 @@ When the continuation bit is set to 1, the length field is continued in the next
 | 6          |   24 |                 16777215 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data**, not the encoded data or the length field itself.
+Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
 
 
 Whitespace
 ----------
 
-The length field may also be broken up using the same whitespace rules as for safe32.
+The length field may contain whitespace at any point in the stream, following the same rules as for safe32.
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence, one of two things will happen:
+Should truncation occur anywhere in the encoded sequence (length or data), one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
@@ -198,12 +241,12 @@ Examples
 
 | Length | Encoded Bits        | Length Field |
 | ------ | ------------------- | ------------ |
-|      1 | `00001`             | `0`          |
+|      1 | `00001`             | `2`          |
 |     15 | `01111`             | `g`          |
 |     16 | `10001 00000`       | `j0`         |
 |   2000 | `10111 11101 00000` | `rx0`        |
 
-Example: Length field & data:
+#### Example: Length field & data:
 
 Data:
 
@@ -212,9 +255,9 @@ Data:
 
 Encoded:
 
-    j0589rugt2s75akwb6kuqwt6mtv0
+    j0589rugt2s75akwb6kuqwt6mt7s
 
-Where `j0` is the length field (16)
+In this case, the length field is `j0` (16)
 
 
 Advantages over base32 padding
@@ -229,7 +272,6 @@ Advantages over base32 padding
 Version History
 ---------------
 
- * January 4, 2019: Version 1
  * January 1, 2019: Preview Version 1
 
 
