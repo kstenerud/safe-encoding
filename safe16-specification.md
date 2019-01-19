@@ -86,16 +86,14 @@ Note: Dash is included as "whitespace" to allow human input sequences such as:
 Examples
 --------
 
-TODO
-
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: 85a96sd288dsqfbddffha40
+    Encoded: 391282e18139d98b394c639d048c
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-    Encoded: wsabe8zs82qrq0dt8tq67yv0
+    Encoded: e612a69ff8386d7b01993e6c537b60
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 589rugt2s75akwb6kuqwt6mtv0
+    Encoded: 21d17d3f21c18899714596adcc9679d8
 
 ------------------------------------------------------------------------------
 
@@ -154,14 +152,12 @@ Should truncation occur anywhere in the encoded sequence, one of two things will
 Examples
 --------
 
-TODO
-
-| Length | Encoded Bits        | Length Field |
-| ------ | ------------------- | ------------ |
-|      1 | `00001`             | `0`          |
-|     15 | `01111`             | `g`          |
-|     16 | `10001 00000`       | `j0`         |
-|   2000 | `10111 11101 00000` | `rx0`        |
+| Length | Encoded Bits          | Length Field |
+| ------ | --------------------- | ------------ |
+|      1 | `0001`                | `1`          |
+|      7 | `0111`                | `7`          |
+|      8 | `1001 0000`           | `90`         |
+|   2000 | `1011 1111 1010 0000` | `bfa0`       |
 
 Example: Length field & data:
 
@@ -172,9 +168,9 @@ Data:
 
 Encoded:
 
-    j0589rugt2s75akwb6kuqwt6mtv0
+    a021d17d3f21c18899714596adcc9679d8
 
-Where `j0` is the length field (16)
+Where `a0` is the length field (16)
 
 
 Advantages over base16

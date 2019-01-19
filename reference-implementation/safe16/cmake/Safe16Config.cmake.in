@@ -1,0 +1,10 @@
+get_filename_component(SAFE16_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+list(APPEND CMAKE_MODULE_PATH ${SAFE16_CMAKE_DIR})
+
+if(NOT TARGET SAFE16::SAFE16)
+    include("${SAFE16_CMAKE_DIR}/SAFE16Targets.cmake")
+endif()
+
+set(SAFE16_LIBRARIES SAFE16::SAFE16)

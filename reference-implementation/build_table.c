@@ -97,7 +97,7 @@ static const uint8_t g_chunk_to_encode_char_subst_c_16[] = {};
 
 static const uint8_t g_whitespace_16[] =
 {
-    0x09, 0x0a, 0x0d, 0x20
+    0x09, 0x0a, 0x0d, 0x20, '-'
 };
 
 // ==================================================================
@@ -190,9 +190,9 @@ int main(void)
     printf("%s", g_header);
 
     // FILL_CHUNK_TABLE(85);
-    FILL_CHUNK_TABLE(64);
+    // FILL_CHUNK_TABLE(64);
     // FILL_CHUNK_TABLE(32);
-    // FILL_CHUNK_TABLE(16);
+    FILL_CHUNK_TABLE(16);
 
     for(int ch = 0; ch < sizeof(g_chunk_table); ch++)
     {
