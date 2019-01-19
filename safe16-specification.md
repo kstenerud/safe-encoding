@@ -26,7 +26,7 @@ It is especially useful for things requiring human input such as activation code
 Encoding
 --------
 
-Safe64 encoding uses an alphabet of 16 characters from the single-byte UTF-8 set to represent 5-bit values. These characters are grouped together by 8 (forming 40 bits), which can then be used to encode 5 bytes of data per group. This multiplies the size of the encoded data by a factor of 1.6.
+Safe64 encoding uses an alphabet of 16 characters from the single-byte UTF-8 set to represent 4-bit values. These characters are grouped together by 2 (forming 8 bits), which can then be used to encode 1 byte of data per group. This multiplies the size of the encoded data by a factor of 2.0.
 
     Original: [aaaaaaaa]
     Encoded:  [aaaa] [aaaaa]
