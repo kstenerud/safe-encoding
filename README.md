@@ -42,9 +42,9 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 | **safe16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   16  |  2.0  |
 | **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |
 | **safe32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   32  |  1.6  |
-| **base32** |   ✓  |   ✓  |   ✓  |  ²  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
+| **base32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
 | **safe64** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   64  |  1.33 |
-| **base64** |   ✓  |   ✓  |   ✓  |  ³  |   ³  |      |       |      |       |        |       |        |   65  |  1.33 |
+| **base64** |   ✓  |   ✓  |   ✓  |  ²  |   ²  |      |       |      |       |        |       |        |   65  |  1.33 |
 | **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ¹  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 |
 | **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |
 
@@ -53,7 +53,7 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 * **SGML**:   Can be used in SGML documents (such as HTML and XML) without escaping
 * **JSON**:   Can be used in JSON documents without escaping
 * **Code**:   Can be used in source code string literals without escaping
-* **URI**:    Can be used in URIs without escaping
+* **URI**:    Can be used in the path, query, and fragment components of URIs without escaping
 * **File**:   Can be used in filenames
 * **Host**:   Can be used in hostnames
 * **Trunc**:  Can detect truncation in all cases
@@ -68,8 +68,7 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 ##### Notes:
 
 * **¹**: Only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
-* **²**: Only for general delimiters in URIs. Sub-delimiters may need escaping
-* **³**: Some restrictions do not apply if using URI and filename safe variant
+* **²**: Some restrictions do not apply if using URI and filename safe variant
 
 
 
