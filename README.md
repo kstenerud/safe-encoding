@@ -21,7 +21,7 @@ Features:
 
 ### Safe64 and below
 
- * Safe for use in URLs without escaping
+ * Safe for use in URIs without escaping
  * Safe for use in filenames
 
 ### Safe32 and below
@@ -37,23 +37,23 @@ Advantages
 
 The safe encodings have been specially designed to avoid numerous issues with other binary-to-text encoding schemes. Here are the relative advantages of the various safeXYZ and baseXYZ encodings:
 
-| Encoding   | SGML | JSON | Code | URL | File | Host | Trunc | Sort | White | Length | Human | No-Pad | Alpha | Bloat | Comp |
-| ---------- | ---- | ---- | ---- | --- | ---- | ---- | ----- | ---- | ----- | ------ | ----- | ------ | ----- | ----- | ---- |
-| **safe16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   16  |  2.0  |      |
-| **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |      |
-| **safe32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   32  |  1.6  |      |
-| **base32** |   ✓  |   ✓  |   ✓  |  ²  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |      |
-| **safe64** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   64  |  1.33 |      |
-| **base64** |   ✓  |   ✓  |   ✓  |  ³  |   ³  |      |       |      |       |        |       |        |   65  |  1.33 |      |
-| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ¹  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 | 750x |
-| **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |   5x |
+| Encoding   | SGML | JSON | Code | URI | File | Host | Trunc | Sort | White | Length | Human | No-Pad | Alpha | Bloat |
+| ---------- | ---- | ---- | ---- | --- | ---- | ---- | ----- | ---- | ----- | ------ | ----- | ------ | ----- | ----- |
+| **safe16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   16  |  2.0  |
+| **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |
+| **safe32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   32  |  1.6  |
+| **base32** |   ✓  |   ✓  |   ✓  |  ²  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
+| **safe64** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   64  |  1.33 |
+| **base64** |   ✓  |   ✓  |   ✓  |  ³  |   ³  |      |       |      |       |        |       |        |   65  |  1.33 |
+| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ¹  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 |
+| **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |
 
 ##### Legend:
 
 * **SGML**:   Can be used in SGML documents (such as HTML and XML) without escaping
 * **JSON**:   Can be used in JSON documents without escaping
 * **Code**:   Can be used in source code string literals without escaping
-* **URL**:    Can be used in URLs without escaping
+* **URI**:    Can be used in URIs without escaping
 * **File**:   Can be used in filenames
 * **Host**:   Can be used in hostnames
 * **Trunc**:  Can detect truncation in all cases
@@ -64,13 +64,12 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 * **No-Pad**: Encoding scheme does not require padding
 * **Alpha**:  Size of the encoding alphabet (including special characters)
 * **Bloat**:  How much the size increases from original form to encoded form
-* **Comp**:   Maximum compression performance
 
 ##### Notes:
 
 * **¹**: Only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
-* **²**: Only for general delimiters in URLs. Sub-delimiters may need escaping
-* **³**: Some restrictions do not apply if using URL and filename safe variant
+* **²**: Only for general delimiters in URIs. Sub-delimiters may need escaping
+* **³**: Some restrictions do not apply if using URI and filename safe variant
 
 
 

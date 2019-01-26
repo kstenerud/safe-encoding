@@ -6,7 +6,7 @@ Safe85 is a binary data encoding scheme that is safe to be passed through proces
 ### Features:
 
  * Safe for use in JSON, SGML formats, source code string literals, without escaping
- * Mostly safe for URLs (only sub-delimiters need to be escaped)
+ * Mostly safe for URIs (only sub-delimiters need to be escaped)
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
  * Alternate Form with Support for length fields
@@ -18,9 +18,8 @@ Safe85 is a binary data encoding scheme that is safe to be passed through proces
  * No padding characters
  * No escaping necessary
  * Liberal whitespace rules
+ * Reliable truncation detection
  * Safe for filenames on Linux, UNIX, POSIX, Mac filesystems
- * Better end-of-field and truncation detection
- * Better compression
  * Sortable in generic text sorting algorithms
 
 
@@ -36,9 +35,14 @@ The following semi-accurate approximation shows the general idea:
     Encoded:  [aaaaaa] [abbbbb] [bbbccc] [cccccd] [dddddd]
 
 
-### Encoding Process
+Encoding Process
+----------------
 
 The encoding process encodes groups of 4 bytes, outputting 5 chunks per group. If the source data length is not a multiple of 4, then the final group is output as a partial group, using only as many chunks as is necessary to encode the remaining bytes, with the unused high portion of the highest chunk cleared.
+
+### Groups
+
+Encoding is normally done in 4-byte groups. However, if the source data is not a multiple of 4 bytes, the final group will be a partial group.
 
 #### 4 Byte Full Group
 
@@ -54,7 +58,7 @@ Next, the accumulator is broken down big-endian style into radix-85 chunks:
     chunk[3] = (accumulator / 85) % 85
     chunk[4] = accumulator % 85
 
-Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk cannot be larger than 82, which will be important in a later section.
+Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk cannot be larger than 82.
 
 | Chunk 0 | Chunk 1 | Chunk 2 | Chunk 3 | Chunk 4 |
 | ------- | ------- | ------- | ------- | ------- |
@@ -102,7 +106,7 @@ Algorithm:
     chunk[0] = (accumulator / 85) % 85
     chunk[1] = accumulator % 85
 
-#### Alphabet
+### Alphabet
 
 Once the chunk values have been determined, they are output as characters according to the following alphabet:
 
@@ -128,67 +132,47 @@ Once the chunk values have been determined, they are output as characters accord
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
 
-### Run-Length Encoding
+#### Choice of Alphabet
 
-Certain kinds of data will contain the same byte value repeated many times. In such cases, it's more space efficient to encode the data in run-lengths.
+In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. To produce an alphabet of 85 characters, 9 of these must be dropped. The following are the nine most problematic characters in modern text processing systems:
 
-Since the initial chunk values `83` and `84` are invalid (they'd place the accumulator outside of the range 0 - 0xffffffff no matter what the other chunks are), we assign these special meanings as run-length encoding initiators.
+| Character | SGML | STRING | URI | FILE |
+| --------- | ---- | ------ | --- | ---- |
+|    `"`    |   X  |    X   |     |      |
+|    `#`    |      |        |  X  |      |
+|    `&`    |   X  |        |  X  |      |
+|    `'`    |   X  |        |  X  |      |
+|    `/`    |      |        |  X  |   X  |
+|    `:`    |      |        |  X  |      |
+|    `<`    |   X  |        |     |      |
+|    `?`    |      |        |  X  |      |
+|    `\`    |      |    X   |     |      |
 
+##### Legend:
 
-#### 3-Character Run-Length Encoding
-
-3-character run-length encoding is marked by the special initial chunk value `83`. Upon encountering this chunk, the two subsequent characters are decoded and combined mathematically to build a joint repeat and byte value field:
-
-| chunk | value 1 | value 0 |
-| ----- | ------- | ------- |
-| 83    | 0 - 84  | 0 - 84  |
-
-The joint field is built like so: `joint_field = value1 * 85 + value0`
-
-This gives a field value in the range 0 - 7224 (0x1c38), which is then subdivided into a repeat count, and the byte value to be repeated:
-
-| Bits 8-12    | Bits 0-7   |
-| ------------ | ---------- |
-| Repeat Count | Byte Value |
-| 0 - 28       | 0 - 255    |
-
-Since a run-length sequence is 3 characters long, which in normal encoding can encode 2 bytes of data, it doesn't make sense to run-length encode sequences of less than 3 bytes of source data. We therefore implicitly add 3 to the repeat count value, giving a repeat range of 3 - 31.
-
-    joint_field = value1 * 85 + value0
-    byte_value = joint_field & 0xff
-    repeat_count = (joint_field >> 8) + 3
-
-Note: Since the value 7224 (0x1c38) does not fall on a bit boundary, only byte values from 0x00 - 0x38 can have a repeat count of 31 (28 + 3). All other byte values have a maximum repeat count of 30.
-
-With this encoding scheme, we can encode up to 31 bytes of repeating data into 3 characters. Normal encoding would require 39 characters to encode the same data. It is thus possible to achieve up to 13x space savings over uncompressed data.
+* **SGML**:   Reserved in SGML (such as HTML, XML) documents
+* **STRING**: Reserved in string literals
+* **URI**:    Reserved or problematic in the path, query, or fragment components of URIs
+* **File**:   Reserved in POSIX file systems
 
 
-#### 4-Character Run-Length Encoding
+The following characters are considered less disruptive when included in the alphabet:
 
-If you have very long sequences of repeating byte values, the 4-character run-length encoding (chunk `84`) provides better compression:
-
-| chunk | value 2 | value 1 | value 0 |
-| ----- | ------- | ------- | ------- |
-| 84    | 0 - 84  | 0 - 84  | 0 - 84  |
-
-    joint_field = value2 * 7225 + value1 * 85 + value0
-
-This gives a field value in the range 0 - 614124 (0x95eec), which is then subdivided into a repeat count, and the byte value to be repeated:
-
-| Bits 8-19    | Bits 0-7   |
-| ------------ | ---------- |
-| Repeat Count | Byte Value |
-| 0 - 2398     | 0 - 255    |
-
-Since the 3-byte run-length encoding allows repeat counts up to 30 for all byte values, we implicitly add 31 to the 4-byte run-length repeat count to avoid overlap, giving a range of 31-2429.
-
-    joint_field = value2 * 7225 + value1 * 85 + value0
-    byte_value = joint_field & 0xff
-    repeat_count = (joint_field >> 8) + 31
-
-Note: Since the value 614124 (0x95eec) does not fall on a bit boundary, only byte values from 0x00 - 0xec can have a repeat count of 2429 (2398 + 31). All other byte values have a maximum count value of 2428.
-
-With this encoding scheme, we can encode up to 2429 bytes of repeating data into 4 characters. Normal encoding would require 3037 characters to encode the same data. It is thus possible to achieve up to a 760x space savings over uncompressed data, and up to 50x savings over 3-character run-length encoding.
+| Char | Technology | Issue                                      |
+| ---- | ---------- | ------------------------------------------ |
+| `>`  | SGML       | Reserved only after an opening `<`         |
+| `[`  | URI        | Reserved only in the authority component   |
+| `]`  | URI        | Reserved only in the authority component   |
+| `@`  | URI        | Reserved only in the authority component   |
+| `+`  | URI        | Reserved only in the scheme component      |
+| `!`  | URI        | Reserved application-specific              |
+| `$`  | URI        | Reserved application-specific              |
+| `(`  | URI        | Reserved application-specific              |
+| `)`  | URI        | Reserved application-specific              |
+| `*`  | URI        | Reserved application-specific              |
+| `,`  | URI        | Parameter delimiter (application-specific) |
+| `;`  | URI        | Parameter delimiter (application-specific) |
+| `=`  | URI        | Parameter delimiter (application-specific) |
 
 
 
@@ -319,7 +303,7 @@ In this case, the length field is `J$` (33)
 Advantages over base85 padding
 ------------------------------
 
- * No extra alphabet character is necessary. The length encodes using the exact same alphabet as the data encoding.
+ * Base85 requires the application developer to write code to pad the source data, leaking a lower layer's implementation details to a higher one.
  * Truncation is always detected. With base85 padding, truncation on a 5-character boundary will not be detected.
  * Lower data usage for smaller data. base85's padding scheme uses an average of 2 characters no matter the length of the data. Safe85L uses only 1 byte for lengths 31 and under. By the time its size performance suffers in comparison to base85 (at length 1024), the character length difference is already less than 0.1% of the total payload size, and shrinks from there.
 

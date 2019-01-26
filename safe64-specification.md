@@ -18,7 +18,7 @@ Safe64 is a binary data encoding scheme that is safe to be passed through proces
  * No escaping necessary
  * Liberal whitespace rules
  * Safe for use in filenames
- * Better end-of-field and truncation detection
+ * Reliable truncation detection
  * Sortable in generic text sorting algorithms (such as file listings)
 
 
