@@ -20,7 +20,6 @@ Features:
  * Safe for use in filenames on POSIX file systems
  * Sortable in generic text sorting algorithms (such as file listings)
 
-
 ### Safe64 and below
 
  * Safe for use in all URI components without escaping
