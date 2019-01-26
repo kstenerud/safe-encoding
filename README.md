@@ -11,24 +11,26 @@ Features:
 ### All
 
  * Safe for use in JSON, SGML formats, source code strings, without escaping
+ * Safe for use in path, query, and fragment components of URIs
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
  * Support for length fields
  * Liberal whitespace rules
  * No padding characters
+ * Safe for use in filenames on POSIX file systems
  * Sortable in generic text sorting algorithms (such as file listings)
 
 
 ### Safe64 and below
 
- * Safe for use in URIs without escaping
- * Safe for use in filenames
+ * Safe for use in all URI components without escaping
+ * Safe for use in filenames on all file systems
 
 ### Safe32 and below
 
- * Useful for human input situations such as activation codes.
- * Easily confusable characters & digits are interchangeable.
- * Uppercase and lowercase characters are interchangeable.
+ * Useful for human input situations such as activation codes
+ * Easily confusable characters & digits are interchangeable
+ * Uppercase and lowercase characters are interchangeable
 
 
 
@@ -82,7 +84,7 @@ Specifications
 
 
 
-These specifications are part of [Project Specification](https://github.com/kstenerud/specifications)
+These specifications are part of the [Specification Project](https://github.com/kstenerud/specifications)
 
 
 License

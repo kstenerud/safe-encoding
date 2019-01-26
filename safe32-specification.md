@@ -111,35 +111,27 @@ Next, the accumulator is broken down big-endian style into radix-32 chunks:
 
 Once the chunk values have been determined, they are output as characters according to the following alphabet:
 
-| Value  | Char | Value  | Char |
-| ------ | ---- | ------ | ---- |
-| **00** | `0`  | **10** | `h`  |
-| **01** | `2`  | **11** | `j`  |
-| **02** | `3`  | **12** | `k`  |
-| **03** | `4`  | **13** | `m`  |
-| **04** | `5`  | **14** | `n`  |
-| **05** | `6`  | **15** | `p`  |
-| **06** | `7`  | **16** | `q`  |
-| **07** | `8`  | **17** | `r`  |
-| **08** | `9`  | **18** | `s`  |
-| **09** | `a`  | **19** | `t`  |
-| **0a** | `b`  | **1a** | `u`  |
-| **0b** | `c`  | **1b** | `v`  |
-| **0c** | `d`  | **1c** | `w`  |
-| **0d** | `e`  | **1d** | `x`  |
-| **0e** | `f`  | **1e** | `y`  |
-| **0f** | `g`  | **1f** | `z`  |
+| Value  | Char | Value  | Char | Value  | Char | Value  | Char |
+| ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- |
+| **00** | `0`  | **08** | `9`  | **10** | `h`  | **18** | `s`  |
+| **01** | `2`  | **09** | `a`  | **11** | `j`  | **19** | `t`  |
+| **02** | `3`  | **0a** | `b`  | **12** | `k`  | **1a** | `u`  |
+| **03** | `4`  | **0b** | `c`  | **13** | `m`  | **1b** | `v`  |
+| **04** | `5`  | **0c** | `d`  | **14** | `n`  | **1c** | `w`  |
+| **05** | `6`  | **0d** | `e`  | **15** | `p`  | **1d** | `x`  |
+| **06** | `7`  | **0e** | `f`  | **16** | `q`  | **1e** | `y`  |
+| **07** | `8`  | **0f** | `g`  | **17** | `r`  | **1f** | `z`  |
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
 The characters of the alphabet are chosen to minimize confusion when entered by humans:
 
  * No symbols are included
- * `1`, `l`, `i` (and by extension `I`) are not included
- * `O` and `o` are substitutes for `0`
+ * `1`, `l`, `i` (and its capital `I`) are not included
+ * The letters `O` and `o` are substitutes for the numeral `0`, and must be accepted as such by a decoder.
  * Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`)
 
-Note: Although they are technically valid, an encoder must not output `O` or `o`. Use only `0`.
+Note: Although the letters `O` and `o` are valid substitutes for the numeral `0`, an encoder must only output the numeral.
 
 
 Whitespace
@@ -157,7 +149,7 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 0020       | Space           |
 | 002D       | Dash `-`        |
 
-Note: Dash is included as "whitespace" to allow human input sequences such as:
+Note: Dash is included as "whitespace" to allow human-input sequences such as:
 
     85a9-6sd2-88ds-qfbd
 

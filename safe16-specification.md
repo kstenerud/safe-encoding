@@ -33,24 +33,16 @@ Safe64 encoding uses an alphabet of 16 characters from the single-byte UTF-8 set
 
 The 4-bit alphabet:
 
-| Value  | Char |
-| ------ | ---- |
-| **00** | `0`  |
-| **01** | `1`  |
-| **02** | `2`  |
-| **03** | `3`  |
-| **04** | `4`  |
-| **05** | `5`  |
-| **06** | `6`  |
-| **07** | `7`  |
-| **08** | `8`  |
-| **09** | `9`  |
-| **0a** | `a`  |
-| **0b** | `b`  |
-| **0c** | `c`  |
-| **0d** | `d`  |
-| **0e** | `e`  |
-| **0f** | `f`  |
+| Value  | Char | Value  | Char |
+| ------ | ---- | ------ | ---- |
+| **00** | `0`  | **08** | `8`  |
+| **01** | `1`  | **09** | `9`  |
+| **02** | `2`  | **0a** | `a`  |
+| **03** | `3`  | **0b** | `b`  |
+| **04** | `4`  | **0c** | `c`  |
+| **05** | `5`  | **0d** | `d`  |
+| **06** | `6`  | **0e** | `e`  |
+| **07** | `7`  | **0f** | `f`  |
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 

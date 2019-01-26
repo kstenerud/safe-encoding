@@ -6,7 +6,7 @@ Safe85 is a binary data encoding scheme that is safe to be passed through proces
 ### Features:
 
  * Safe for use in JSON, SGML formats, source code string literals, without escaping
- * Mostly safe for URIs (only sub-delimiters need to be escaped)
+ * Safe for use in path, query, and fragment components of URIs
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
  * Alternate Form with Support for length fields
@@ -15,7 +15,7 @@ Safe85 is a binary data encoding scheme that is safe to be passed through proces
 ### Advantages over base85:
 
  * Smaller alphabet
- * No padding characters
+ * No padding
  * No escaping necessary
  * Liberal whitespace rules
  * Reliable truncation detection
