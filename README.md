@@ -76,6 +76,8 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 Specifications
 --------------
 
+These specifications are part of the [Specification Project](https://github.com/kstenerud/specifications)
+
  * [Safe16](safe16-specification.md)
  * [Safe32](safe32-specification.md)
  * [Safe64](safe64-specification.md)
@@ -83,7 +85,16 @@ Specifications
 
 
 
-These specifications are part of the [Specification Project](https://github.com/kstenerud/specifications)
+Reference Implementations
+-------------------------
+
+The reference implementations contain libraries and command line executables:
+
+ * [Safe16](reference-implementation/safe16)
+ * [Safe32](reference-implementation/safe32)
+ * [Safe64](reference-implementation/safe64)
+ * [Safe85](reference-implementation/safe85)
+
 
 
 License
