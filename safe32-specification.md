@@ -273,6 +273,7 @@ Advantages over base32 padding
 Version History
 ---------------
 
+ * January 29, 2019: Version 1
  * January 1, 2019: Preview Version 1
 
 

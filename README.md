@@ -45,8 +45,8 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 | **safe32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   32  |  1.6  |
 | **base32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
 | **safe64** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   64  |  1.33 |
-| **base64** |   ✓  |   ✓  |   ✓  |  ²  |   ²  |      |       |      |       |        |       |        |   65  |  1.33 |
-| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ¹  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 |
+| **base64** |   ✓  |   ✓  |   ✓  |  ¹  |   ¹  |      |       |      |       |        |       |        |   65  |  1.33 |
+| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ²  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 |
 | **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |
 
 ##### Legend:
@@ -68,8 +68,8 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 
 ##### Notes:
 
-* **¹**: Only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
-* **²**: Some restrictions do not apply if using URI and filename safe variant
+* **¹**: Some restrictions do not apply if using URI and filename safe variants
+* **²**: Safe only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
 
 
 

@@ -1,5 +1,5 @@
-License for Safe64 and Safe32 Specifications
-============================================
+License for Safe Encoding Specifications
+========================================
 
 License Type: Creative Commons Attribution 4.0 International Public License
 

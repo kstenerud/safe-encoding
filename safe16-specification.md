@@ -26,12 +26,28 @@ It is especially useful for things requiring human input such as activation code
 Encoding
 --------
 
-Safe64 encoding uses an alphabet of 16 characters from the single-byte UTF-8 set to represent 4-bit values. These characters are grouped together by 2 (forming 8 bits), which can then be used to encode 1 byte of data per group. This multiplies the size of the encoded data by a factor of 2.0.
+Safe16 encoding uses an alphabet of 16 characters from the single-byte printable UTF-8 set to represent radix-16 chunks (where each chunk has an individual value from 0 - 15). These chunks are grouped magnitudally into big-endian sequences of 2 chunks, giving a range of 16^2 = 256 (0x100), which allows 8 bits (1 byte) of data storage per group. Such an ecoding scheme multiplies the size of the data by a factor of 2.0.
+
+Layout:
 
     Original: [aaaaaaaa]
     Encoded:  [aaaa] [aaaaa]
 
-The 4-bit alphabet:
+
+### Encoding Process
+
+Each byte is split into two radix-16 chunks:
+
+    chunk[0] = (accumulator >> 4) & 0x0f
+    chunk[1] = accumulator & 0x0f
+
+| Chunk 0 | Chunk 1 |
+| ------- | ------- |
+| 0 - 15  | 0 - 15  |
+
+#### Alphabet
+
+Once the chunk values have been determined, they are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- |
@@ -169,6 +185,7 @@ Advantages over base16
 Version History
 ---------------
 
+ * January 29, 2019: Version 1
  * January 14, 2019: Preview Version 1
 
 

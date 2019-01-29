@@ -134,7 +134,7 @@ The alphabet is ordered according to the characters' ordinal positions in UTF-8,
 
 #### Choice of Alphabet
 
-In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. To produce an alphabet of 85 characters, 9 of these must be dropped. The following are the nine most problematic characters in modern text processing systems:
+In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only 85 characters, 9 of these can be dropped. In safe85, the nine most problematic characters in modern text processing systems are dropped:
 
 | Character | SGML | STRING | URI | FILE |
 | --------- | ---- | ------ | --- | ---- |
@@ -156,7 +156,7 @@ In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whi
 * **File**:   Reserved in POSIX file systems
 
 
-The following characters are considered less disruptive when included in the alphabet:
+The following characters are also potentially problematic, but are either situational, can be worked around in the encoding scheme, or are less severe of a problem than the other nine:
 
 | Char | Technology | Issue                                      |
 | ---- | ---------- | ------------------------------------------ |
@@ -312,6 +312,7 @@ Advantages over base85 padding
 Version History
 ---------------
 
+ * January 29, 2019: Version 1
  * January 14, 2019: Preview Version 1
 
 
