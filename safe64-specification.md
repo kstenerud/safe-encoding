@@ -139,6 +139,12 @@ Examples
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
     Encoded: 7S4xEm60X8_lGOPhn8Ot2N
 
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s64`, for example `mydata.s64`.
+
 ------------------------------------------------------------------------------
 
 
@@ -218,6 +224,12 @@ Encoded:
     W07Mg0aIvGUIwWXn_BNw577R57aM5abzW4_i50DPrB_bbN
 
 In this case, the length field is `W0` (33)
+
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s64l`, for example `mydata.s64l`.
 
 
 Advantages over base64 padding

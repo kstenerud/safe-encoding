@@ -97,6 +97,12 @@ Examples
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
     Encoded: 21d17d3f21c18899714596adcc9679d8
 
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s16`, for example `mydata.s16`.
+
 ------------------------------------------------------------------------------
 
 
@@ -173,6 +179,12 @@ Encoded:
     a021d17d3f21c18899714596adcc9679d8
 
 Where `a0` is the length field (16)
+
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s16l`, for example `mydata.s16l`.
 
 
 Advantages over base16

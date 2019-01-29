@@ -219,6 +219,12 @@ Examples
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
     Encoded: 0stg*0r4~*MKP6zkj.X1
 
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s85`, for example `mydata.s85`.
+
 ------------------------------------------------------------------------------
 
 
@@ -298,6 +304,12 @@ Encoded:
     J$0ja=a;60mK0lIG[I*8|Mh70U!_X!`XYRvJ]as!-_%W
 
 In this case, the length field is `J$` (33)
+
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s85l`, for example `mydata.s85l`.
 
 
 Advantages over base85 padding

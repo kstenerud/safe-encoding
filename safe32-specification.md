@@ -183,6 +183,12 @@ Examples
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
     Encoded: 589rugt2s75akwb6kuqwt6mt7s
 
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s32`, for example `mydata.s32`.
+
 ------------------------------------------------------------------------------
 
 
@@ -259,6 +265,12 @@ Encoded:
     j0589rugt2s75akwb6kuqwt6mt7s
 
 In this case, the length field is `j0` (16)
+
+
+Filenames
+---------
+
+Files containing safe16 data should have the extension `s32l`, for example `mydata.s32l`.
 
 
 Advantages over base32 padding
