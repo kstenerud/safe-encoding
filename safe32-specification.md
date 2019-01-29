@@ -187,7 +187,7 @@ Examples
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s32`, for example `mydata.s32`.
+Files containing safe32 data should have the extension `s32`, for example `mydata.s32`.
 
 ------------------------------------------------------------------------------
 
@@ -270,7 +270,7 @@ In this case, the length field is `j0` (16)
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s32l`, for example `mydata.s32l`.
+Files containing safe32l data should have the extension `s32l`, for example `mydata.s32l`.
 
 
 Advantages over base32 padding

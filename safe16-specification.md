@@ -184,7 +184,7 @@ Where `a0` is the length field (16)
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s16l`, for example `mydata.s16l`.
+Files containing safe16l data should have the extension `s16l`, for example `mydata.s16l`.
 
 
 Advantages over base16

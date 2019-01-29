@@ -143,7 +143,7 @@ Examples
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s64`, for example `mydata.s64`.
+Files containing safe64 data should have the extension `s64`, for example `mydata.s64`.
 
 ------------------------------------------------------------------------------
 
@@ -229,7 +229,7 @@ In this case, the length field is `W0` (33)
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s64l`, for example `mydata.s64l`.
+Files containing safe64l data should have the extension `s64l`, for example `mydata.s64l`.
 
 
 Advantages over base64 padding

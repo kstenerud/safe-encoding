@@ -223,7 +223,7 @@ Examples
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s85`, for example `mydata.s85`.
+Files containing safe85 data should have the extension `s85`, for example `mydata.s85`.
 
 ------------------------------------------------------------------------------
 
@@ -309,7 +309,7 @@ In this case, the length field is `J$` (33)
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s85l`, for example `mydata.s85l`.
+Files containing safe85l data should have the extension `s85l`, for example `mydata.s85l`.
 
 
 Advantages over base85 padding
