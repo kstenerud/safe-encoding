@@ -54,7 +54,7 @@ For comparison, baseXY encodings:
 | **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |
 | **base32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
 | **base64** |   ✓  |   ✓  |   ✓  |  2  |   2  |      |       |      |       |        |       |        |   65  |  1.33 |
-| **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |
+| **base85** |      |      |      |     |      |      |       |      |   ✓   |        |       |        |   87  |  1.25 |
 
 * 2: Some restrictions do not apply if using URI and filename safe variants
 
