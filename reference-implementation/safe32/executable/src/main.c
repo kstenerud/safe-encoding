@@ -335,20 +335,22 @@ static char* g_argv_0;
 static void print_usage()
 {
     print_error("\
-Safe32: Encodes binary data into a radix-32 text format safe for use in modern text processors.\n\
-Output data is written to stdout. Input data may be a file, or stdin (by specifying the filename: '-')\n\
+Safe32 v%s: Encodes binary data into a radix-32 text format safe for use in modern text processors.\n\
+Copyright (c) 2019 Karl Stenerud, License: MIT, NO WARRANTIES IMPLIED\n\
 \n\
-Usage: %s [options] <filename>\n\
+Usage: %s [options] [file]\n\
+Where the default behavior is to encode from stdin to stdout.\n\
 \n\
 Options:\n\
   -h: Print help and exit\n\
   -v: Print version and exit\n\
-  -d: Decode a file to stdout\n\
-  -e: Encode a file to stdout\n\
-  -l: Use/expect a length field. MAKE SURE YOU MATCH THIS SETTING IN ENCODE AND DECODE\n\
-  -b <count>: Insert a line break every <count> output characters\n\
-  -i <count>: Insert <count> spaces indentation at the start of every line\n\
-", basename(g_argv_0));
+  -d: Decode instead of encoding\n\
+  -l: Encode/decode safe64l (with a length field)\n\
+  -n <count>: Insert a newline every <count> encoded characters\n\
+  -i <count>: Insert <count> spaces indentation on each line\n\
+\n\
+File: If not specified, - (read from stdin) is assumed.\n\
+", PROJECT_VERSION, basename(g_argv_0));
 }
 
 static void print_usage_error_exit()
@@ -362,23 +364,16 @@ static void print_version()
     printf("%s\n", PROJECT_VERSION);
 }
 
-typedef enum
-{
-    PROCESS_UNSET,
-    PROCESS_DECODING,
-    PROCESS_ENCODING,
-} process;
-
 int main(const int argc, char** const argv)
 {
     g_argv_0 = argv[0];
-    process current_process = PROCESS_UNSET;
     int ch;
+    bool is_encoding = true;
     bool use_length_fields = false;
     int line_break_at = 0;
     int indent_count = 0;
 
-    while((ch = getopt(argc, argv, "?hvdelb:i:")) >= 0)
+    while((ch = getopt(argc, argv, "?hvdln:i:")) >= 0)
     {
         switch(ch)
         {
@@ -390,44 +385,32 @@ int main(const int argc, char** const argv)
                 print_version();
                 exit(0);
             case 'd':
-                current_process = PROCESS_DECODING;
-                break;
-            case 'e':
-                current_process = PROCESS_ENCODING;
+                is_encoding = false;
                 break;
             case 'l':
                 use_length_fields = true;
                 break;
-            case 'b':
+            case 'n':
                 sscanf(optarg, "%d", &line_break_at);
                 break;
             case 'i':
                 sscanf(optarg, "%d", &indent_count);
                 break;
             default:
-                printf("Got %d %c\n", ch, ch);
+                printf("Unknown option: %d %c\n", ch, ch);
                 print_usage_error_exit();
         }
     }
 
-    if((argc - optind) != 1)
+    const char* const filename = (optind < argc) ? argv[optind] : "-";
+
+    if(is_encoding)
     {
-        print_usage_error_exit();
+        encode(filename, use_length_fields, line_break_at, indent_count);
     }
-
-    const char* const filename = argv[optind];
-
-    switch(current_process)
+    else
     {
-        case PROCESS_ENCODING:
-            encode(filename, use_length_fields, line_break_at, indent_count);
-            break;
-        case PROCESS_DECODING:
-            decode(filename, use_length_fields);
-            break;
-        default:
-            print_error("Error: Must select encode or decode\n");
-            print_usage_error_exit();
+        decode(filename, use_length_fields);
     }
 
     return 0;
