@@ -1,5 +1,5 @@
-Safe Text Encodings
-===================
+Safe Text Encoding
+==================
 
 Binary data encoding schemes that are safe to be passed through processing systems that expect human readable text, without requiring escaping.
 
@@ -36,20 +36,29 @@ Features:
 Advantages
 ----------
 
-The safe encodings have been specially designed to avoid numerous issues with other binary-to-text encoding schemes. Here are the relative advantages of the various safeXYZ and baseXYZ encodings:
+The safe encodings have been specially designed to avoid numerous issues with other binary-to-text encoding schemes. Here are the relative advantages of the various encodings:
 
 | Encoding   | SGML | JSON | Code | URI | File | Host | Trunc | Sort | White | Length | Human | No-Pad | Alpha | Bloat |
 | ---------- | ---- | ---- | ---- | --- | ---- | ---- | ----- | ---- | ----- | ------ | ----- | ------ | ----- | ----- |
 | **safe16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   16  |  2.0  |
-| **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |
 | **safe32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |   ✓   |   ✓  |   ✓   |    ✓   |   ✓   |    ✓   |   32  |  1.6  |
-| **base32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
 | **safe64** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   64  |  1.33 |
-| **base64** |   ✓  |   ✓  |   ✓  |  ¹  |   ¹  |      |       |      |       |        |       |        |   65  |  1.33 |
-| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   ²  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 |
+| **safe85** |   ✓  |   ✓  |   ✓  |  ✓  |   1  |      |   ✓   |   ✓  |   ✓   |    ✓   |       |    ✓   |   85  |  1.25 |
+
+* 1: Safe only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
+
+For comparison, baseXY encodings:
+
+| Encoding   | SGML | JSON | Code | URI | File | Host | Trunc | Sort | White | Length | Human | No-Pad | Alpha | Bloat |
+| ---------- | ---- | ---- | ---- | --- | ---- | ---- | ----- | ---- | ----- | ------ | ----- | ------ | ----- | ----- |
+| **base16** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |   ✓  |       |        |   ✓   |    ✓   |   16  |  2.0  |
+| **base32** |   ✓  |   ✓  |   ✓  |  ✓  |   ✓  |   ✓  |       |      |       |        |       |        |   33  |  1.6  |
+| **base64** |   ✓  |   ✓  |   ✓  |  2  |   2  |      |       |      |       |        |       |        |   65  |  1.33 |
 | **base85** |      |      |      |     |      |      |       |   ✓  |   ✓   |        |       |        |   87  |  1.25 |
 
-##### Legend:
+* 2: Some restrictions do not apply if using URI and filename safe variants
+
+#### Legend:
 
 * **SGML**:   Can be used in SGML documents (such as HTML and XML) without escaping
 * **JSON**:   Can be used in JSON documents without escaping
@@ -66,10 +75,20 @@ The safe encodings have been specially designed to avoid numerous issues with ot
 * **Alpha**:  Size of the encoding alphabet (including special characters)
 * **Bloat**:  How much the size increases from original form to encoded form
 
-##### Notes:
 
-* **¹**: Some restrictions do not apply if using URI and filename safe variants
-* **²**: Safe only for filenames in POSIX filesystems (UNIX, Linux, BSD, Mac, etc)
+
+### Compression
+
+The choice of radix affects compressibility. For example, an uncompressed source (iso) and a compressed source (jpeg):
+
+| Uncompressed Source | Size | Compressed Source | Size |
+| ------------------- | ---- | ----------------- | ---- |
+| original            | 1.00 | original          | 1.00 |
+| gzip                | 0.88 | gzip              | 0.99 |
+| safe16 gzip         | 1.03 | safe16 gzip       | 1.13 |
+| safe32 gzip         | 0.97 | safe32 gzip       | 1.05 |
+| safe64 gzip         | 0.92 | safe64 gzip       | 1.01 |
+| safe85 gzip         | 0.93 | safe85 gzip       | 1.03 |
 
 
 

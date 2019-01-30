@@ -134,7 +134,7 @@ The alphabet is ordered according to the characters' ordinal positions in UTF-8,
 
 #### Choice of Alphabet
 
-In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only 85 characters, 9 of these can be dropped. In safe85, the nine most problematic characters in modern text processing systems are dropped:
+In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only use 85 characters, 9 of these can be dropped. In safe85, the nine most problematic characters in modern text processing systems are dropped:
 
 | Character | SGML | STRING | URI | FILE |
 | --------- | ---- | ------ | --- | ---- |
@@ -165,11 +165,11 @@ The following characters are also potentially problematic, but are either situat
 | `]`  | URI        | Reserved only in the authority component   |
 | `@`  | URI        | Reserved only in the authority component   |
 | `+`  | URI        | Reserved only in the scheme component      |
-| `!`  | URI        | Reserved application-specific              |
-| `$`  | URI        | Reserved application-specific              |
-| `(`  | URI        | Reserved application-specific              |
-| `)`  | URI        | Reserved application-specific              |
-| `*`  | URI        | Reserved application-specific              |
+| `!`  | URI        | Reserved (application-specific)            |
+| `$`  | URI        | Reserved (application-specific)            |
+| `(`  | URI        | Reserved (application-specific)            |
+| `)`  | URI        | Reserved (application-specific)            |
+| `*`  | URI        | Reserved (application-specific)            |
 | `,`  | URI        | Parameter delimiter (application-specific) |
 | `;`  | URI        | Parameter delimiter (application-specific) |
 | `=`  | URI        | Parameter delimiter (application-specific) |
