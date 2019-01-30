@@ -141,7 +141,7 @@ In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whi
 |    `"`    |   X  |    X   |     |      |
 |    `#`    |      |        |  X  |      |
 |    `&`    |   X  |        |  X  |      |
-|    `'`    |   X  |        |  X  |      |
+|    `'`    |   X  |    X   |  X  |      |
 |    `/`    |      |        |  X  |   X  |
 |    `:`    |      |        |  X  |      |
 |    `<`    |   X  |        |     |      |
