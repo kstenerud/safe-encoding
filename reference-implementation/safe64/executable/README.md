@@ -36,16 +36,15 @@ Building
 Usage
 -----
 
-    Safe64: Encodes binary data into a radix-64 text format safe for use in modern text processors.
-    Output data is written to stdout. Input data may be a file, or stdin (by specifying the filename: '-')
-
-    Usage: safe64 [options] <filename>
+    Usage: safe64 [options] [file]
+    Where the default behavior is to encode from stdin to stdout.
 
     Options:
       -h: Print help and exit
       -v: Print version and exit
-      -d: Decode a file to stdout
-      -e: Encode a file to stdout
-      -l: Use/expect a length field. MAKE SURE YOU MATCH THIS SETTING IN ENCODE AND DECODE
-      -b <count>: Insert a line break every <count> output characters
-      -i <count>: Insert <count> spaces indentation at the start of every line
+      -d: Decode instead of encoding
+      -l: Encode/decode safe64l (with a length field)
+      -n <count>: Insert a newline every <count> encoded characters
+      -i <count>: Insert <count> spaces indentation on each line
+
+    File: If not specified, - (read from stdin) is assumed.
