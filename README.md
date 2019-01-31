@@ -76,19 +76,18 @@ For comparison, baseXY encodings:
 * **Bloat**:  How much the size increases from original form to encoded form
 
 
-
 ### Compression
 
-The choice of radix affects compressibility. For example, an uncompressed source (iso) and a compressed source (jpeg):
+The choice of radix affects compressibility. For example, an uncompressed source (win2k install iso), a compressed source (jpeg), and a precompressed source (win2k install iso gzipped, encoded, gzipped again):
 
-| Uncompressed Source | Size | Compressed Source | Size |
-| ------------------- | ---- | ----------------- | ---- |
-| original            | 1.00 | original          | 1.00 |
-| gzip                | 0.88 | gzip              | 0.99 |
-| safe16 gzip         | 1.03 | safe16 gzip       | 1.13 |
-| safe32 gzip         | 0.97 | safe32 gzip       | 1.05 |
-| safe64 gzip         | 0.92 | safe64 gzip       | 1.01 |
-| safe85 gzip         | 0.93 | safe85 gzip       | 1.03 |
+| Uncompressed Source | Size | Compressed Source | Size | Preompressed Source | Size |
+| ------------------- | ---- | ----------------- | ---- | ------------------- | ---- |
+| original            | 1.00 | original          | 1.00 | original            | 1.00 |
+| gzip                | 0.88 | gzip              | 0.99 | gzip                | 0.88 |
+| safe16 gzip         | 1.03 | safe16 gzip       | 1.13 | gzip safe16 gzip    | 1.00 |
+| safe32 gzip         | 0.97 | safe32 gzip       | 1.05 | gzip safe32 gzip    | 0.93 |
+| safe64 gzip         | 0.92 | safe64 gzip       | 1.01 | gzip safe64 gzip    | 0.95 |
+| safe85 gzip         | 0.93 | safe85 gzip       | 1.03 | gzip safe85 gzip    | 1.01 |
 
 
 
