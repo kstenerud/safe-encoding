@@ -83,15 +83,17 @@ pkg_mod.generate(
 # Unit Tests
 # ==========
 
-add_languages('cpp')
-subdir('tests')
+if not meson.is_subproject()
+  add_languages('cpp')
+  subdir('tests')
 
-test('all_tests',
-  executable(
-    'run_tests',
-    files(project_test_files),
-    dependencies : [project_dep, test_dep],
-    install : false,
-    include_directories : private_headers,
+  test('all_tests',
+    executable(
+      'run_tests',
+      files(project_test_files),
+      dependencies : [project_dep, test_dep],
+      install : false,
+      include_directories : private_headers,
+    )
   )
-)
+endif
