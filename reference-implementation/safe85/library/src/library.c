@@ -1,8 +1,10 @@
 #include <safe85/safe85.h>
-#include "version.h"
 
 // #define KSLogger_LocalLevel DEBUG
 #include "kslogger.h"
+
+#define QUOTE(str) #str
+#define EXPAND_AND_QUOTE(str) QUOTE(str)
 
 static const int g_bytes_per_group       = 4;
 static const int g_chunks_per_group      = 5;
@@ -139,7 +141,7 @@ static inline int calculate_length_chunk_count(int64_t length)
 
 const char* safe85_version()
 {
-    return PROJECT_VERSION;
+    return EXPAND_AND_QUOTE(PROJECT_VERSION);
 }
 
 int64_t safe85_get_decoded_length(const int64_t encoded_length)
@@ -288,12 +290,13 @@ safe85_status safe85_decode_feed(const uint8_t** const src_buffer_ptr,
 
 int64_t safe85_read_length_field(const uint8_t* const buffer,
                                  const int64_t buffer_length,
-                                 uint64_t* const length)
+                                 int64_t* const length)
 {
     if(buffer_length < 0)
     {
         return SAFE85_ERROR_INVALID_LENGTH;
     }
+    const int64_t max_pre_append_value = INT64_MAX >> g_bits_per_length_chunk;
     const int continuation_bit = 1 << g_bits_per_length_chunk;
     const int max_chunk_value = continuation_bit - 1;
     const int chunk_mask = continuation_bit - 1;
@@ -301,7 +304,7 @@ int64_t safe85_read_length_field(const uint8_t* const buffer,
                 g_bits_per_length_chunk, continuation_bit, chunk_mask);
 
     const uint8_t* buffer_end = buffer + buffer_length;
-    uint64_t value = 0;
+    int64_t value = 0;
     int next_chunk = 0;
 
     const uint8_t* src = buffer;
@@ -318,6 +321,11 @@ int64_t safe85_read_length_field(const uint8_t* const buffer,
         {
             KSLOG_DEBUG("Error: Invalid length character: [%c]", *src);
             return SAFE85_ERROR_INVALID_SOURCE_DATA;
+        }
+        if(value > max_pre_append_value)
+        {
+            KSLOG_DEBUG("Error: Length field too big");
+            return SAFE85_ERROR_INVALID_SOURCE_DATA;            
         }
         value = (value << g_bits_per_length_chunk) | (next_chunk & chunk_mask);
         KSLOG_DEBUG("Chunk %d: '%c' (%d), continue %d, value portion = %d",
@@ -364,7 +372,7 @@ int64_t safe85_decode(const uint8_t* const src_buffer,
         }
         return status;
     }
-    uint64_t decoded_byte_count = dst - dst_buffer;
+    int64_t decoded_byte_count = dst - dst_buffer;
     KSLOG_DEBUG("Decoded %d bytes", decoded_byte_count);
     return decoded_byte_count;
 }
@@ -379,7 +387,7 @@ int64_t safe85l_decode(const uint8_t* const src_buffer,
         return SAFE85_ERROR_INVALID_LENGTH;
     }
     KSLOG_DEBUG("Decode with src buffer length %ld, dst buffer length %d", src_length, dst_length);
-    uint64_t specified_length = 0;
+    int64_t specified_length = 0;
     const int64_t bytes_used = safe85_read_length_field(src_buffer, src_length, &specified_length);
     if(bytes_used < 0)
     {
@@ -406,7 +414,7 @@ int64_t safe85l_decode(const uint8_t* const src_buffer,
         }
         return status;
     }
-    uint64_t decoded_byte_count = dst - dst_buffer;
+    int64_t decoded_byte_count = dst - dst_buffer;
     if(decoded_byte_count < specified_length)
     {
         KSLOG_DEBUG("Error: Expected to decode %lu bytes, but only decoded %lu bytes",
@@ -515,11 +523,11 @@ safe85_status safe85_encode_feed(const uint8_t** const src_buffer_ptr,
 #undef WRITE_CHUNKS
 }
 
-int64_t safe85_write_length_field(const uint64_t length,
+int64_t safe85_write_length_field(const int64_t length,
                                   uint8_t* const dst_buffer,
                                   const int64_t dst_buffer_length)
 {
-    if(dst_buffer_length < 0)
+    if(dst_buffer_length < 0 || length < 0)
     {
         return SAFE85_ERROR_INVALID_LENGTH;
     }

@@ -238,7 +238,7 @@ void assert_decode_status(int buffer_size, std::string encoded, int expected_sta
     ASSERT_EQ(expected_status_code, actual_status_code);
 }
 
-void assert_encode_length(uint64_t length, std::string expected_encoded)
+void assert_encode_length(int64_t length, std::string expected_encoded)
 {
     std::vector<uint8_t> encode_buffer(100);
     int64_t bytes_written = safe64_write_length_field(length, encode_buffer.data(), encode_buffer.size());
@@ -247,31 +247,31 @@ void assert_encode_length(uint64_t length, std::string expected_encoded)
     ASSERT_EQ(expected_encoded, actual_encoded);
 }
 
-void assert_encode_decode_length(uint64_t start_length, uint64_t end_length)
+void assert_encode_decode_length(int64_t start_length, int64_t end_length)
 {
-    for(__int128 i = start_length; i <= end_length; i++)
+    for(int64_t i = start_length; i <= end_length; i++)
     {
-        uint64_t length = (uint64_t)i;
+        int64_t length = i;
         std::vector<uint8_t> encode_buffer(100);
         int64_t bytes_written = safe64_write_length_field(length, encode_buffer.data(), encode_buffer.size());
         ASSERT_GT(bytes_written, 0);
-        uint64_t actual_length = 0;
+        int64_t actual_length = 0;
         int64_t bytes_read = safe64_read_length_field((uint8_t*)encode_buffer.data(), bytes_written, &actual_length);
         ASSERT_GT(bytes_read, 0);
         ASSERT_EQ(length, actual_length);
     }
 }
 
-void assert_encode_length_status(uint64_t length, int buffer_size, int64_t expected_status)
+void assert_encode_length_status(int64_t length, int buffer_size, int64_t expected_status)
 {
     std::vector<uint8_t> encode_buffer(buffer_size);
     int64_t actual_status = safe64_write_length_field(length, encode_buffer.data(), encode_buffer.size());
     ASSERT_EQ(expected_status, actual_status);
 }
 
-void assert_decode_length(std::string encoded, uint64_t expected_length, int64_t expected_status)
+void assert_decode_length(std::string encoded, int64_t expected_length, int64_t expected_status)
 {
-    uint64_t actual_length;
+    int64_t actual_length;
     int64_t actual_status = safe64_read_length_field((uint8_t*)encoded.data(), encoded.size(), &actual_length);
     ASSERT_EQ(expected_status, actual_status);
     if(expected_status >= 0)
@@ -437,7 +437,7 @@ TEST(Length, invalid)
     ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64l_encode(decoded_data.data(), -1, encoded_data.data(), 1));
     ASSERT_EQ(SAFE64_ERROR_INVALID_LENGTH, safe64l_encode(decoded_data.data(), 1, encoded_data.data(), -1));
 
-    uint64_t length = 0;
+    int64_t length = 0;
     uint8_t* encoded_ptr = (uint8_t*)encoded_data.data();
     const uint8_t* const_encoded_ptr = encoded_ptr;
     uint8_t* decoded_ptr = decoded_data.data();

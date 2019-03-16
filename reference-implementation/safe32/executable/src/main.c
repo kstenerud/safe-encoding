@@ -1,4 +1,3 @@
-#include "version.h"
 #include <safe32/safe32.h>
 
 #include <libgen.h>
@@ -7,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#define QUOTE(str) #str
+#define EXPAND_AND_QUOTE(str) QUOTE(str)
 
 
 // 4096 seems optimal. Smaller than this causes a 10% performance penalty.
@@ -90,10 +92,10 @@ static int read_from_file(FILE* const file,
 }
 
 static void write_to_file(FILE* const file,
-                          const uint8_t* const data,
+                          const char* const data,
                           const int length)
 {
-    if(fwrite(data, 1, length, file) != length)
+    if(fwrite(data, 1, length, file) != (unsigned)length)
     {
         perror_exit("Could not write %d bytes to file", length);
     }
@@ -115,6 +117,9 @@ static void error_unexpected_status_exit(const safe32_status status)
         HANDLE_CASE(SAFE32_ERROR_TRUNCATED_DATA);
         HANDLE_CASE(SAFE32_ERROR_INVALID_LENGTH);
         HANDLE_CASE(SAFE32_ERROR_NOT_ENOUGH_ROOM);
+
+        // This should not happen
+        HANDLE_CASE(SAFE32_STATUS_OK);
     }
     print_error("Error: Unexpected status %d (%s)\n", status, name);
     exit(1);
@@ -214,7 +219,7 @@ static void encode(const char* const filename,
         int64_t bytes_to_write = safe32_write_length_field(file_size, encoded_buffer, sizeof(encoded_buffer));
 
         current_offset = output_encoded(dst_file,
-                                        encoded_buffer,
+                                        (char*)encoded_buffer,
                                         bytes_to_write,
                                         current_offset,
                                         line_break_at,
@@ -244,7 +249,7 @@ static void encode(const char* const filename,
         const int bytes_to_write = dst - encoded_buffer;
 
         current_offset = output_encoded(dst_file,
-                                        encoded_buffer,
+                                        (char*)encoded_buffer,
                                         bytes_to_write,
                                         current_offset,
                                         line_break_at,
@@ -278,12 +283,12 @@ static void decode(const char* const filename, const bool use_length_field)
                                               encoded_buffer,
                                               bytes_to_read,
                                               &is_at_end);
-        int64_t bytes_processed = safe32_read_length_field(encoded_buffer, bytes_to_read, &expected_bytes_decoded);
+        int64_t bytes_processed = safe32_read_length_field(encoded_buffer, bytes_read, &expected_bytes_decoded);
         if(bytes_processed < 0)
         {
             error_unexpected_status_exit(bytes_processed);
         }
-        encoded_buffer_offset = bytes_to_read - bytes_processed;
+        encoded_buffer_offset = bytes_read - bytes_processed;
         memmove(encoded_buffer, encoded_buffer + bytes_processed, encoded_buffer_offset);
     }
 
@@ -314,7 +319,7 @@ static void decode(const char* const filename, const bool use_length_field)
         const int bytes_processed = src - encoded_buffer;
         const int bytes_to_write = dst - decoded_buffer;
 
-        write_to_file(dst_file, decoded_buffer, bytes_to_write);
+        write_to_file(dst_file, (const char*)decoded_buffer, bytes_to_write);
         total_bytes_decoded += bytes_to_write;
 
         encoded_buffer_offset = bytes_to_process - bytes_processed;
@@ -350,7 +355,7 @@ Options:\n\
   -i <count>: Insert <count> spaces indentation on each line\n\
 \n\
 File: If not specified, - (read from stdin) is assumed.\n\
-", PROJECT_VERSION, basename(g_argv_0));
+", EXPAND_AND_QUOTE(PROJECT_VERSION), basename(g_argv_0));
 }
 
 static void print_usage_error_exit()
@@ -361,7 +366,7 @@ static void print_usage_error_exit()
 
 static void print_version()
 {
-    printf("%s\n", PROJECT_VERSION);
+    printf("%s\n", EXPAND_AND_QUOTE(PROJECT_VERSION));
 }
 
 int main(const int argc, char** const argv)

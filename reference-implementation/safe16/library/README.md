@@ -7,9 +7,10 @@ A C implementation to demonstrate a simple SAFE16 codec.
 Requirements
 ------------
 
-  * CMake 3.5 or higher
+  * Meson 0.49 or newer
+  * Ninja 1.8.2 or newer
   * A C compiler
-  * A C++ compiler (for the unit tests)
+  * A C++ compiler (for the tests)
 
 
 Dependencies
@@ -22,20 +23,24 @@ Dependencies
 Building
 --------
 
-    mkdir build
-    cd build
-    cmake ..
-    make
+    meson build
+    ninja -C build
 
 
 Running Tests
 -------------
 
-    make test
+    ninja -C build test
 
-or:
+For the full report:
 
-    ./tests/Safe16
+    ./build/run_tests
+
+
+Installing
+----------
+
+    ninja -C build install
 
 
 Usage
