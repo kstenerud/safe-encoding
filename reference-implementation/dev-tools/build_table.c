@@ -19,9 +19,7 @@ static const uint8_t g_chunk_to_encode_char_85[] =
     'z', '{', '|', '}', '~',
 };
 
-static const uint8_t g_chunk_to_encode_char_subst_a_85[] = {};
-static const uint8_t g_chunk_to_encode_char_subst_b_85[] = {};
-static const uint8_t g_chunk_to_encode_char_subst_c_85[] = {};
+static const uint8_t g_chunk_to_encode_char_85_subst[] = {};
 
 static const uint8_t g_whitespace_85[] =
 {
@@ -43,9 +41,7 @@ static const uint8_t g_chunk_to_encode_char_64[] =
     's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 };
 
-static const uint8_t g_chunk_to_encode_char_subst_a_64[] = {};
-static const uint8_t g_chunk_to_encode_char_subst_b_64[] = {};
-static const uint8_t g_chunk_to_encode_char_subst_c_64[] = {};
+static const uint8_t g_chunk_to_encode_char_64_subst[] = {};
 
 static const uint8_t g_whitespace_64[] =
 {
@@ -57,21 +53,23 @@ static const uint8_t g_whitespace_64[] =
 
 static const uint8_t g_chunk_to_encode_char_32[] =
 {
-    '0', '2', '3', '4', '5', '6', '7', '8',
-    '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-    'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r',
-    's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'j', 'k', 'm', 'n', 'p', 'q',
+    'r', 's', 't', 'v', 'w', 'x', 'y', 'z',
 };
 
-static const uint8_t g_chunk_to_encode_char_subst_a_32[] =
+static const uint8_t g_chunk_to_encode_char_32_subst[] =
 {
-    '0', '2', '3', '4', '5', '6', '7', '8',
-    '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-    'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R',
-    'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    'A', 'a',   'B', 'b',   'C', 'c',   'D', 'd',
+    'E', 'e',   'F', 'f',   'G', 'g',   'H', 'h',
+    'i', '1',   'I', '1',   'J', 'j',   'K', 'k',
+    'l', '1',   'L', '1',   'M', 'm',   'N', 'n',
+    'o', '0',   'O', '0',   'P', 'p',   'Q', 'q',
+    'R', 'r',   'S', 's',   'T', 't',   'u', 'v',
+    'U', 'v',   'V', 'v',   'W', 'w',   'X', 'x',
+    'Y', 'y',   'Z', 'z',
 };
-static const uint8_t g_chunk_to_encode_char_subst_b_32[] = {'o'};
-static const uint8_t g_chunk_to_encode_char_subst_c_32[] = {'O'};
 
 static const uint8_t g_whitespace_32[] =
 {
@@ -87,13 +85,11 @@ static const uint8_t g_chunk_to_encode_char_16[] =
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 };
 
-static const uint8_t g_chunk_to_encode_char_subst_a_16[] =
+static const uint8_t g_chunk_to_encode_char_16_subst[] =
 {
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+    'A', 'a',   'B', 'b',   'C', 'c',   'D', 'd',
+    'E', 'e',   'F', 'f',
 };
-static const uint8_t g_chunk_to_encode_char_subst_b_16[] = {};
-static const uint8_t g_chunk_to_encode_char_subst_c_16[] = {};
 
 static const uint8_t g_whitespace_16[] =
 {
@@ -120,52 +116,43 @@ static const char* const g_footer = "#undef WHTE\n\
 
 #define CHUNK_CODE_ERROR 0xff
 #define CHUNK_CODE_WHITESPACE 0xfe
-static uint8_t g_chunk_table[256];
+static uint8_t g_decode_table[256];
+static const uint8_t* g_encode_table;
+static int g_encode_table_length;
 
 static void fill_chunk_table(const uint8_t* const char_table,
                              const int char_table_length,
-                             const uint8_t* const subst_char_table_a,
-                             const int subst_char_table_a_length,
-                             const uint8_t* const subst_char_table_b,
-                             const int subst_char_table_b_length,
-                             const uint8_t* const subst_char_table_c,
-                             const int subst_char_table_c_length,
+                             const uint8_t* const subst_char_pairs_table,
+                             const int subst_char_pairs_table_length,
                              const uint8_t* const whitespace_table,
                              const int whitespace_table_length)
 {
-    for(int i = 0; i < sizeof(g_chunk_table); i++)
+    g_encode_table = char_table;
+    g_encode_table_length = char_table_length;
+
+    for(int i = 0; i < sizeof(g_decode_table); i++)
     {
-        g_chunk_table[i] = CHUNK_CODE_ERROR;
+        g_decode_table[i] = CHUNK_CODE_ERROR;
     }
 
     for(int chunk_value = 0; chunk_value < char_table_length; chunk_value++)
     {
         uint8_t character = char_table[chunk_value];
-        g_chunk_table[character] = chunk_value;
+        g_decode_table[character] = chunk_value;
     }
 
-    for(int chunk_value = 0; chunk_value < subst_char_table_a_length; chunk_value++)
+    const uint8_t* pairs_end = subst_char_pairs_table + subst_char_pairs_table_length;
+    for(const uint8_t* pair = subst_char_pairs_table; pair < pairs_end; pair += 2)
     {
-        uint8_t character = subst_char_table_a[chunk_value];
-        g_chunk_table[character] = chunk_value;
-    }
-
-    for(int chunk_value = 0; chunk_value < subst_char_table_b_length; chunk_value++)
-    {
-        uint8_t character = subst_char_table_b[chunk_value];
-        g_chunk_table[character] = chunk_value;
-    }
-
-    for(int chunk_value = 0; chunk_value < subst_char_table_c_length; chunk_value++)
-    {
-        uint8_t character = subst_char_table_c[chunk_value];
-        g_chunk_table[character] = chunk_value;
+        uint8_t substitute = pair[0];
+        uint8_t index = pair[1];
+        g_decode_table[substitute] = g_decode_table[index];
     }
 
     for(int whitespace = 0; whitespace < whitespace_table_length; whitespace++)
     {
         uint8_t character = whitespace_table[whitespace];
-        g_chunk_table[character] = CHUNK_CODE_WHITESPACE;
+        g_decode_table[character] = CHUNK_CODE_WHITESPACE;
     }
 }
 
@@ -174,12 +161,8 @@ static void fill_chunk_table(const uint8_t* const char_table,
     fill_chunk_table( \
         g_chunk_to_encode_char_ ## MODE, \
         sizeof(g_chunk_to_encode_char_ ## MODE), \
-        g_chunk_to_encode_char_subst_a_ ## MODE, \
-        sizeof(g_chunk_to_encode_char_subst_a_ ## MODE), \
-        g_chunk_to_encode_char_subst_b_ ## MODE, \
-        sizeof(g_chunk_to_encode_char_subst_b_ ## MODE), \
-        g_chunk_to_encode_char_subst_c_ ## MODE, \
-        sizeof(g_chunk_to_encode_char_subst_c_ ## MODE), \
+        g_chunk_to_encode_char_ ## MODE ## _subst, \
+        sizeof(g_chunk_to_encode_char_ ## MODE ## _subst), \
         g_whitespace_ ## MODE, \
         sizeof(g_whitespace_ ## MODE))
 
@@ -189,18 +172,18 @@ int main(void)
 {
     printf("%s", g_header);
 
-    // FILL_CHUNK_TABLE(85);
+    // FILL_CHUNK_TABLE(16);
+    FILL_CHUNK_TABLE(32);
     // FILL_CHUNK_TABLE(64);
-    // FILL_CHUNK_TABLE(32);
-    FILL_CHUNK_TABLE(16);
+    // FILL_CHUNK_TABLE(85);
 
-    for(int ch = 0; ch < sizeof(g_chunk_table); ch++)
+    for(int ch = 0; ch < sizeof(g_decode_table); ch++)
     {
         if((ch & 7) == 0)
         {
             printf("\n    ");
         }
-        uint8_t chunk_value = g_chunk_table[ch];
+        uint8_t chunk_value = g_decode_table[ch];
         switch(chunk_value)
         {
             case CHUNK_CODE_ERROR:
@@ -214,5 +197,16 @@ int main(void)
         }
     }
 
-    printf("\n%s\n", g_footer);
+    printf("\n%s\n\n", g_footer);
+
+    printf("static const uint8_t g_chunk_to_encode_char[] =\n{");
+    for(int i = 0; i < g_encode_table_length; i++)
+    {
+        if((i & 7) == 0)
+        {
+            printf("\n   ");
+        }
+        printf(" '%c',", (char)g_encode_table[i]);
+    }
+    printf("\n};\n");
 }

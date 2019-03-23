@@ -113,25 +113,28 @@ Once the chunk values have been determined, they are output as characters accord
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- |
-| **00** | `0`  | **08** | `9`  | **10** | `h`  | **18** | `s`  |
-| **01** | `2`  | **09** | `a`  | **11** | `j`  | **19** | `t`  |
-| **02** | `3`  | **0a** | `b`  | **12** | `k`  | **1a** | `u`  |
-| **03** | `4`  | **0b** | `c`  | **13** | `m`  | **1b** | `v`  |
-| **04** | `5`  | **0c** | `d`  | **14** | `n`  | **1c** | `w`  |
-| **05** | `6`  | **0d** | `e`  | **15** | `p`  | **1d** | `x`  |
-| **06** | `7`  | **0e** | `f`  | **16** | `q`  | **1e** | `y`  |
-| **07** | `8`  | **0f** | `g`  | **17** | `r`  | **1f** | `z`  |
+| **00** | `0`  | **08** | `8`  | **10** | `g`  | **18** | `r`  |
+| **01** | `1`  | **09** | `9`  | **11** | `h`  | **19** | `s`  |
+| **02** | `2`  | **0a** | `a`  | **12** | `j`  | **1a** | `t`  |
+| **03** | `3`  | **0b** | `b`  | **13** | `k`  | **1b** | `v`  |
+| **04** | `4`  | **0c** | `c`  | **14** | `m`  | **1c** | `w`  |
+| **05** | `5`  | **0d** | `d`  | **15** | `n`  | **1d** | `x`  |
+| **06** | `6`  | **0e** | `e`  | **16** | `p`  | **1e** | `y`  |
+| **07** | `7`  | **0f** | `f`  | **17** | `q`  | **1f** | `z`  |
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
 The characters of the alphabet are chosen to minimize confusion when entered by humans:
 
  * No symbols are included
- * `1`, `l`, `i` (and its capital `I`) are not included
- * The letters `O` and `o` are substitutes for the numeral `0`, and must be accepted as such by a decoder.
- * Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`)
+ * All letters may be substituted with their capitals.
+ * `0` may be substituted with `o` or its capital.
+ * `1` may be substituted with `l` or `i` or their capitals.
+ * `v` may be substituted with `u` or its capital.
 
-Note: Although the letters `O` and `o` are valid substitutes for the numeral `0`, an encoder must only output the numeral.
+An encoder may choose to generate all lowercase or all uppercase characters, but must not generate mixed case.
+
+Note: Encoders must generate `0`, `1`, and `v`/`V` rather than their substitutes.
 
 
 Whitespace
@@ -175,13 +178,13 @@ Examples
 --------
 
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: 85a96sd288dsqfbd2jtu25d
+    Encoded: 74985rc177crpeac1hst14c
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-    Encoded: wsabe8zs82qrq0dt8tq67yv0
+    Encoded: wr9ad7zr71pqp0cs7sp56yv0
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 589rugt2s75akwb6kuqwt6mt7s
+    Encoded: 478qtfs1r649jwa5jtpws5ks6r
 
 
 Filenames
@@ -262,9 +265,9 @@ Data:
 
 Encoded:
 
-    j0589rugt2s75akwb6kuqwt6mt7s
+    h0478qtfs1r649jwa5jtpws5ks6r
 
-In this case, the length field is `j0` (16)
+In this case, the length field is `h0` (16)
 
 
 Filenames
@@ -285,7 +288,8 @@ Advantages over base32 padding
 Version History
 ---------------
 
- * January 29, 2019: Version 1
+ * March 23, 2019: Version 2
+ * January 29, 2018: Version 1
  * January 1, 2019: Preview Version 1
 
 
