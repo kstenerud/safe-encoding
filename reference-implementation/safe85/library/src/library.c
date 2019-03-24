@@ -103,14 +103,14 @@ static inline int extract_chunk_from_accumulator(const int64_t accumulator, cons
     const int chunk_modulo = g_factor_per_chunk;
     if(chunk_index_lo_first == 0)
     {
-        const int extracted_chunk = (unsigned)accumulator % chunk_modulo;
+        const int extracted_chunk = accumulator % chunk_modulo;
         KSLOG_DEBUG("Extract chunk %d from %lx: %02x (%c)", chunk_index_lo_first, accumulator, extracted_chunk,
             g_chunk_to_encode_char[extracted_chunk]);
         return extracted_chunk;
     }
 
     const int divide_amount = divide_amounts[chunk_index_lo_first];
-    const int extracted_chunk = (unsigned)(accumulator / divide_amount) % chunk_modulo;
+    const int extracted_chunk = (accumulator / divide_amount) % chunk_modulo;
     KSLOG_DEBUG("Extract chunk %d from %lx: %02x (%c)", chunk_index_lo_first, accumulator, extracted_chunk,
         g_chunk_to_encode_char[extracted_chunk]);
     return extracted_chunk;
