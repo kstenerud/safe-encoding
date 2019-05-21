@@ -3,6 +3,13 @@ Safe Text Encoding
 
 Binary data encoding schemes that are safe to be passed through processing systems that expect human readable text, without requiring escaping.
 
+Alternative To:
+
+* Base16
+* Base32
+* Base64
+* Ascii85
+
 
 
 Features:
