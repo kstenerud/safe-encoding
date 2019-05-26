@@ -112,22 +112,22 @@ Once the chunk values have been determined, they are output as characters accord
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char     | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | -------- | ------ | ---- | ------ | ---- |
-| **00** | `!`  | **10** | `6`  | **20** | `I`  | **30** | `Y`      | **40** | `j`  | **50** | `z`  |
-| **01** | `$`  | **11** | `7`  | **21** | `J`  | **31** | `Z`      | **41** | `k`  | **51** | `{`  |
-| **02** | `%`  | **12** | `8`  | **22** | `K`  | **32** | `[`      | **42** | `l`  | **52** | `|`  |
-| **03** | `(`  | **13** | `9`  | **23** | `L`  | **33** | `]`      | **43** | `m`  | **53** | `}`  |
-| **04** | `)`  | **14** | `;`  | **24** | `M`  | **34** | `^`      | **44** | `n`  | **54** | `~`  |
-| **05** | `*`  | **15** | `=`  | **25** | `N`  | **35** | `_`      | **45** | `o`  |        |      |
-| **06** | `+`  | **16** | `>`  | **26** | `O`  | **36** | `` ` ``  | **46** | `p`  |        |      |
-| **07** | `,`  | **17** | `@`  | **27** | `P`  | **37** | `a`      | **47** | `q`  |        |      |
-| **08** | `-`  | **18** | `A`  | **28** | `Q`  | **38** | `b`      | **48** | `r`  |        |      |
-| **09** | `.`  | **19** | `B`  | **29** | `R`  | **39** | `c`      | **49** | `s`  |        |      |
-| **0a** | `0`  | **1a** | `C`  | **2a** | `S`  | **3a** | `d`      | **4a** | `t`  |        |      |
-| **0b** | `1`  | **1b** | `D`  | **2b** | `T`  | **3b** | `e`      | **4b** | `u`  |        |      |
-| **0c** | `2`  | **1c** | `E`  | **2c** | `U`  | **3c** | `f`      | **4c** | `v`  |        |      |
-| **0d** | `3`  | **1d** | `F`  | **2d** | `V`  | **3d** | `g`      | **4d** | `w`  |        |      |
-| **0e** | `4`  | **1e** | `G`  | **2e** | `W`  | **3e** | `h`      | **4e** | `x`  |        |      |
-| **0f** | `5`  | **1f** | `H`  | **2f** | `X`  | **3f** | `i`      | **4f** | `y`  |        |      |
+| **00** | `!`  | **10** | `7`  | **20** | `I`  | **30** | `Y`      | **40** | `j`  | **50** | `z`  |
+| **01** | `$`  | **11** | `8`  | **21** | `J`  | **31** | `Z`      | **41** | `k`  | **51** | `{`  |
+| **02** | `(`  | **12** | `9`  | **22** | `K`  | **32** | `[`      | **42** | `l`  | **52** | `|`  |
+| **03** | `)`  | **13** | `:`  | **23** | `L`  | **33** | `]`      | **43** | `m`  | **53** | `}`  |
+| **04** | `*`  | **14** | `;`  | **24** | `M`  | **34** | `^`      | **44** | `n`  | **54** | `~`  |
+| **05** | `+`  | **15** | `=`  | **25** | `N`  | **35** | `_`      | **45** | `o`  |        |      |
+| **06** | `,`  | **16** | `>`  | **26** | `O`  | **36** | `` ` ``  | **46** | `p`  |        |      |
+| **07** | `-`  | **17** | `@`  | **27** | `P`  | **37** | `a`      | **47** | `q`  |        |      |
+| **08** | `.`  | **18** | `A`  | **28** | `Q`  | **38** | `b`      | **48** | `r`  |        |      |
+| **09** | `0`  | **19** | `B`  | **29** | `R`  | **39** | `c`      | **49** | `s`  |        |      |
+| **0a** | `1`  | **1a** | `C`  | **2a** | `S`  | **3a** | `d`      | **4a** | `t`  |        |      |
+| **0b** | `2`  | **1b** | `D`  | **2b** | `T`  | **3b** | `e`      | **4b** | `u`  |        |      |
+| **0c** | `3`  | **1c** | `E`  | **2c** | `U`  | **3c** | `f`      | **4c** | `v`  |        |      |
+| **0d** | `4`  | **1d** | `F`  | **2d** | `V`  | **3d** | `g`      | **4d** | `w`  |        |      |
+| **0e** | `5`  | **1e** | `G`  | **2e** | `W`  | **3e** | `h`      | **4e** | `x`  |        |      |
+| **0f** | `6`  | **1f** | `H`  | **2f** | `X`  | **3f** | `i`      | **4f** | `y`  |        |      |
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
@@ -138,41 +138,29 @@ In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whi
 
 | Character | SGML | STRING | URI | FILE |
 | --------- | ---- | ------ | --- | ---- |
-|    `"`    |   X  |    X   |     |      |
+|    `"`    |   X  |    X   |  X  |      |
 |    `#`    |      |        |  X  |      |
+|    `%`    |      |        |  X  |      |
 |    `&`    |   X  |        |  X  |      |
 |    `'`    |   X  |    X   |  X  |      |
 |    `/`    |      |        |  X  |   X  |
-|    `:`    |      |        |  X  |      |
-|    `<`    |   X  |        |     |      |
+|    `<`    |   X  |        |  X  |      |
 |    `?`    |      |        |  X  |      |
-|    `\`    |      |    X   |     |      |
+|    `\`    |      |    X   |  X  |      |
+
 
 ##### Legend:
 
 * **SGML**:   Reserved in SGML (such as HTML, XML) documents
 * **STRING**: Reserved in string literals
-* **URI**:    Reserved or problematic in the path, query, or fragment components of URIs
+* **URI**:    Reserved or problematic in URIs
 * **File**:   Reserved in POSIX file systems
 
+##### Notes:
 
-The following characters are also potentially problematic, but are either situational, can be worked around in the encoding scheme, or are less severe of a problem than the other nine:
-
-| Char | Technology | Issue                                      |
-| ---- | ---------- | ------------------------------------------ |
-| `>`  | SGML       | Reserved only after an opening `<`         |
-| `[`  | URI        | Reserved only in the authority component   |
-| `]`  | URI        | Reserved only in the authority component   |
-| `@`  | URI        | Reserved only in the authority component   |
-| `+`  | URI        | Reserved only in the scheme component      |
-| `!`  | URI        | Reserved (application-specific)            |
-| `$`  | URI        | Reserved (application-specific)            |
-| `(`  | URI        | Reserved (application-specific)            |
-| `)`  | URI        | Reserved (application-specific)            |
-| `*`  | URI        | Reserved (application-specific)            |
-| `,`  | URI        | Parameter delimiter (application-specific) |
-| `;`  | URI        | Parameter delimiter (application-specific) |
-| `=`  | URI        | Parameter delimiter (application-specific) |
+* The three most problematic URI characters are `%` (used for percent-escaping), `?` (delimits the query portion), and `#` (delimits the fragment portion).
+* Although the characters `>` `^` `` ` `` `{` `|` `}` `[` `]` are technically not allowed in URIs (`[` and `]` allowed only in the host section), most URI scanners don't reject them.
+* The `>` character is only reserved in SGML after an opening `<`.
 
 
 
@@ -211,13 +199,13 @@ Examples
 --------
 
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: 8F2{*RVCLI8LDzZ!3e
+    Encoded: 9F3{+RVCLI9LDzZ!4e
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-    Encoded: szEXiyl.1C!Tc1o-w;X
+    Encoded: szEXiyl02C!Tc2o.w;X
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 0stg*0r4~*MKP6zkj.X1
+    Encoded: 1stg+1r5~+MKP7zkj0X2
 
 
 Filenames
@@ -287,7 +275,7 @@ Examples
 |      1 | `000001`               | `$`          |
 |     31 | `011111`               | `H`          |
 |     32 | `100001 000000`        | `J!`         |
-|   2000 | `100001 111110 010000` | `Jh6`        |
+|   2000 | `100001 111110 010000` | `Jh7`        |
 
 #### Example: Length field & data:
 
@@ -301,7 +289,7 @@ Data:
 
 Encoded:
 
-    J$0ja=a;60mK0lIG[I*8|Mh70U!_X!`XYRvJ]as!-_%W
+    J$1ja=a;71mK1lIG[I+9|Mh81U!_X!`XYRvJ]as!._(W
 
 In this case, the length field is `J$` (33)
 
@@ -324,6 +312,9 @@ Advantages over base85 padding
 Version History
 ---------------
 
+ * May 26, 2019: Version 2
+   - Removed `%` from the alphabet because it is used for escape encoding.
+   - Added `:` to the alphabet because it is only reserved in the scheme component.
  * January 29, 2019: Version 1
  * January 14, 2019: Preview Version 1
 

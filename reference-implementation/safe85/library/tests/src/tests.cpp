@@ -325,41 +325,41 @@ TEST(Library, version)
     ASSERT_STREQ(expected, actual);
 }
 
-TEST_ENCODE_DECODE(_1_byte,  "%q",      {0xf1})
+TEST_ENCODE_DECODE(_1_byte,  "(q",      {0xf1})
 TEST_ENCODE_DECODE(_2_bytes, "$aF",     {0x2e, 0x99})
 TEST_ENCODE_DECODE(_3_bytes, "Bq|Q",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE(_4_bytes, "@{632",  {0x4a, 0x88, 0xbc, 0xd1})
-TEST_ENCODE_DECODE(_5_bytes, "|-Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_ENCODE_DECODE(_4_bytes, "@{743",  {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE(_5_bytes, "|.Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_ENCODE_DECODE_WITH_LENGTH(_1_byte,  "$%q",      {0xf1})
-TEST_ENCODE_DECODE_WITH_LENGTH(_2_bytes, "%$aF",     {0x2e, 0x99})
-TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, "(Bq|Q",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, ")@{632",   {0x4a, 0x88, 0xbc, 0xd1})
-TEST_ENCODE_DECODE_WITH_LENGTH(_5_bytes, "*|-Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_ENCODE_DECODE_WITH_LENGTH(_1_byte,  "$(q",      {0xf1})
+TEST_ENCODE_DECODE_WITH_LENGTH(_2_bytes, "($aF",     {0x2e, 0x99})
+TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, ")Bq|Q",    {0xf2, 0x34, 0x56})
+TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, "*@{743",   {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE_WITH_LENGTH(_5_bytes, "+|.Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "|-Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "|-Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "|-Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "|-Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "|.Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "|.Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "|.Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "|.Ps^$g", SAFE85_ERROR_NOT_ENOUGH_ROOM)
 
-TEST_DECODE_ERROR(invalid_0, 100, "#-Ps^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_0, 100, "#.Ps^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
 TEST_DECODE_ERROR(invalid_1, 100, "|#Ps^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_2, 100, "|-#s^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_3, 100, "|-P#^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_4, 100, "|-Ps#$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_5, 100, "|-Ps^#g", SAFE85_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_6, 100, "|-Ps^$#", SAFE85_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_2, 100, "|.#s^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_3, 100, "|.P#^$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_4, 100, "|.Ps#$g", SAFE85_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_5, 100, "|.Ps^#g", SAFE85_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_6, 100, "|.Ps^$#", SAFE85_ERROR_INVALID_SOURCE_DATA)
 
-TEST_DECODE(space_0, " |-Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_1, "| -Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_2, "|- Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_3, "|-P s^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_4, "|-Ps ^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_5, "|-Ps^ $g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_6, "|-Ps^$ g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_7, "|-Ps^$g ", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_0, " |.Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_1, "| .Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_2, "|. Ps^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_3, "|.P s^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_4, "|.Ps ^$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_5, "|.Ps^ $g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_6, "|.Ps^$ g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_7, "|.Ps^$g ", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE(lots_of_whitespace, "|\t\t-\r\n\n P   s^\t \t\t$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(lots_of_whitespace, "|\t\t.\r\n\n P   s^\t \t\t$g", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
 TEST(Packetized, encode_dst_packeted)
 {
@@ -384,7 +384,7 @@ TEST(Packetized, decode_dst_packeted)
 
 TEST_ENCODE_LENGTH(_0, 0, "!")
 TEST_ENCODE_LENGTH(_1, 1, "$")
-TEST_ENCODE_LENGTH(_10, 10, "0")
+TEST_ENCODE_LENGTH(_10, 10, "1")
 TEST_ENCODE_LENGTH(_31, 31, "H")
 TEST_ENCODE_LENGTH(_32, 32, "J!")
 TEST_ENCODE_LENGTH(_33, 33, "J$")
@@ -417,7 +417,7 @@ TEST_DECODE_WITH_LENGTH_STATUS(_continues_beyond_end, "$$aF", -1, 1)
 TEST_DECODE_WITH_LENGTH_STATUS(_longer_than_end, "9*|-Ps^$g", -1, SAFE85_ERROR_TRUNCATED_DATA)
 TEST_DECODE_WITH_LENGTH_STATUS(_no_data,  "$", -1, SAFE85_ERROR_TRUNCATED_DATA)
 TEST_DECODE_WITH_LENGTH_STATUS(_invalid, "/%q", -1, SAFE85_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_WITH_LENGTH_STATUS(_whitespace, " J $ 0 j a=a;60mK0lIG[I*8|Mh70U!_X!`XYRvJ]as!-_%W", -1, 33)
+TEST_DECODE_WITH_LENGTH_STATUS(_whitespace, " J $ 1 j a=a;71mK1lIG[I+9|Mh81U!_X!`XYRvJ]as!._(W", -1, 33)
 
 TEST(Length, invalid)
 {
@@ -459,14 +459,14 @@ TEST(Length, invalid)
 
 // Specification Examples:
 
-TEST_ENCODE_DECODE(example_1, "8F2{*RVCLI8LDzZ!3e", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
-TEST_ENCODE_DECODE(example_2, "szEXiyl.1C!Tc1o-w;X", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-TEST_ENCODE_DECODE(example_3, "0stg*0r4~*MKP6zkj.X1", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+TEST_ENCODE_DECODE(example_1, "9F3{+RVCLI9LDzZ!4e", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
+TEST_ENCODE_DECODE(example_2, "szEXiyl02C!Tc2o.w;X", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
+TEST_ENCODE_DECODE(example_3, "1stg+1r5~+MKP7zkj0X2", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
 TEST_DECODE_LENGTH(example_1,    "$",      1, 1)
 TEST_DECODE_LENGTH(example_31,   "H",     31, 1)
 TEST_DECODE_LENGTH(example_32,   "J!",    32, 2)
-TEST_DECODE_LENGTH(example_2000, "Jh6", 2000, 3)
-TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "J$0ja=a;60mK0lIG[I*8|Mh70U!_X!`XYRvJ]as!-_%W", {0x21, 0x7b, 0x01, 0x99, 0x3e, 0xd1, 0x7d, 0x3f, 0x21, 0x8b, 0x39, 0x4c, 0x63, 0xc1, 0x88, 0x21, 0xc1, 0x88, 0x99, 0x71, 0xa6, 0x9f, 0xf8, 0x45, 0x96, 0xe1, 0x81, 0x39, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+TEST_DECODE_LENGTH(example_2000, "Jh7", 2000, 3)
+TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "J$1ja=a;71mK1lIG[I+9|Mh81U!_X!`XYRvJ]as!._(W", {0x21, 0x7b, 0x01, 0x99, 0x3e, 0xd1, 0x7d, 0x3f, 0x21, 0x8b, 0x39, 0x4c, 0x63, 0xc1, 0x88, 0x21, 0xc1, 0x88, 0x99, 0x71, 0xa6, 0x9f, 0xf8, 0x45, 0x96, 0xe1, 0x81, 0x39, 0xad, 0xcc, 0x96, 0x79, 0xd8})
 
 
 // README Examples:
@@ -480,9 +480,9 @@ static void my_receive_encoded_data_function(std::string& data)
     (void)data;
 }
 
-TEST(Example, decoding)
+TEST(Readme, decoding)
 {
-    std::string my_source_data = "8F2{*RVCLI8LDzZ!3e";
+    std::string my_source_data = "9F3{+RVCLI9LDzZ!4e";
 
     int64_t decoded_length = safe85_get_decoded_length(my_source_data.size());
     std::vector<uint8_t> decode_buffer(decoded_length);
@@ -500,9 +500,9 @@ TEST(Example, decoding)
     my_receive_decoded_data_function(decoded_data);
 }
 
-TEST(Example, decoding_with_length)
+TEST(Readme, decoding_with_length)
 {
-    std::string my_source_data = "48F2{*RVCLI8LDzZ!3e";
+    std::string my_source_data = "59F3{+RVCLI9LDzZ!4e";
 
     int64_t decoded_length = safe85_get_decoded_length(my_source_data.size());
     std::vector<uint8_t> decode_buffer(decoded_length);
@@ -520,7 +520,7 @@ TEST(Example, decoding_with_length)
     my_receive_decoded_data_function(decoded_data);
 }
 
-TEST(Example, encoding)
+TEST(Readme, encoding)
 {
     std::vector<uint8_t> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 
@@ -541,7 +541,7 @@ TEST(Example, encoding)
     my_receive_encoded_data_function(encoded_data);
 }
 
-TEST(Example, encoding_with_length)
+TEST(Readme, encoding_with_length)
 {
     std::vector<uint8_t> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 
