@@ -330,42 +330,42 @@ TEST(Library, version)
     ASSERT_STREQ(expected, actual);
 }
 
-TEST_ENCODE_DECODE(_1_byte,  "($",      {0xf1})
-TEST_ENCODE_DECODE(_2_bytes, "$s1",     {0x2e, 0x99})
-TEST_ENCODE_DECODE(_3_bytes, "L!5t",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE(_4_bytes, "!KWGj9",  {0x4a, 0x88, 0xbc, 0xd1})
-TEST_ENCODE_DECODE(_5_bytes, ")6oG3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_ENCODE_DECODE(_1_byte,  ")$",      {0xf1})
+TEST_ENCODE_DECODE(_2_bytes, "$o0",     {0x2e, 0x99})
+TEST_ENCODE_DECODE(_3_bytes, "H!4p",    {0xf2, 0x34, 0x56})
+TEST_ENCODE_DECODE(_4_bytes, "!GSCf8",  {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE(_5_bytes, "*5kC2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_ENCODE_DECODE_WITH_LENGTH(_1_byte,  "$($",      {0xf1})
-TEST_ENCODE_DECODE_WITH_LENGTH(_2_bytes, "%$s1",     {0x2e, 0x99})
-TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, "(L!5t",    {0xf2, 0x34, 0x56})
-TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, ")!KWGj9",   {0x4a, 0x88, 0xbc, 0xd1})
-TEST_ENCODE_DECODE_WITH_LENGTH(_5_bytes, "+)6oG3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_ENCODE_DECODE_WITH_LENGTH(_1_byte,  "$)$",      {0xf1})
+TEST_ENCODE_DECODE_WITH_LENGTH(_2_bytes, "($o0",     {0x2e, 0x99})
+TEST_ENCODE_DECODE_WITH_LENGTH(_3_bytes, ")H!4p",    {0xf2, 0x34, 0x56})
+TEST_ENCODE_DECODE_WITH_LENGTH(_4_bytes, "*!GSCf8",   {0x4a, 0x88, 0xbc, 0xd1})
+TEST_ENCODE_DECODE_WITH_LENGTH(_5_bytes, "+*5kC2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, ")6oG3E;", SAFE80_ERROR_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, ")6oG3E;", SAFE80_ERROR_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, ")6oG3E;", SAFE80_ERROR_NOT_ENOUGH_ROOM)
-TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, ")6oG3E;", SAFE80_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_4, 4, "*5kC2A9", SAFE80_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_3, 3, "*5kC2A9", SAFE80_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_2, 2, "*5kC2A9", SAFE80_ERROR_NOT_ENOUGH_ROOM)
+TEST_DECODE_ERROR(dst_buffer_too_short_1, 1, "*5kC2A9", SAFE80_ERROR_NOT_ENOUGH_ROOM)
 
-TEST_DECODE_ERROR(invalid_0, 100, "#)6oG3E;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_1, 100, ")#6oG3E;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_2, 100, ")6#oG3E;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_3, 100, ")6o#G3E;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_4, 100, ")6oG#3E;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_5, 100, ")6oG3#E;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_6, 100, ")6oG3E#;", SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_ERROR(invalid_7, 100, ")6oG3E;#", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_0, 100, "#*5kC2A9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_1, 100, "*#5kC2A9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_2, 100, "*5#kC2A9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_3, 100, "*5k#C2A9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_4, 100, "*5kC#2A9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_5, 100, "*5kC2#A9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_6, 100, "*5kC2A#9", SAFE80_ERROR_INVALID_SOURCE_DATA)
+TEST_DECODE_ERROR(invalid_7, 100, "*5kC2A9#", SAFE80_ERROR_INVALID_SOURCE_DATA)
 
-TEST_DECODE(space_0, " )6oG3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_1, ") 6oG3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_2, ")6 oG3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_3, ")6o G3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_4, ")6oG 3E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_5, ")6oG3 E;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_6, ")6oG3E ;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
-TEST_DECODE(space_7, ")6oG3E; ", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_0, " *5kC2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_1, "* 5kC2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_2, "*5 kC2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_3, "*5k C2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_4, "*5kC 2A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_5, "*5kC2 A9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_6, "*5kC2A 9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(space_7, "*5kC2A9 ", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
-TEST_DECODE(lots_of_whitespace, ")\t\t6\r\n\n o   G3\t \t\tE;", {0xff, 0x71, 0xdd, 0x3a, 0x92})
+TEST_DECODE(lots_of_whitespace, "*\t\t5\r\n\n k   C2\t \t\tA9", {0xff, 0x71, 0xdd, 0x3a, 0x92})
 
 TEST(Packetized, encode_dst_packeted)
 {
@@ -390,19 +390,19 @@ TEST(Packetized, decode_dst_packeted)
 
 TEST_ENCODE_LENGTH(_0, 0, "!")
 TEST_ENCODE_LENGTH(_1, 1, "$")
-TEST_ENCODE_LENGTH(_10, 10, "2")
-TEST_ENCODE_LENGTH(_31, 31, "L")
-TEST_ENCODE_LENGTH(_32, 32, "N!")
-TEST_ENCODE_LENGTH(_33, 33, "N$")
-TEST_ENCODE_LENGTH(_1023, 1023, "mL")
-TEST_ENCODE_LENGTH(_1024, 1024, "NM!")
-TEST_ENCODE_LENGTH(_1025, 1025, "NM$")
-TEST_ENCODE_LENGTH(_32767, 32767, "mmL")
-TEST_ENCODE_LENGTH(_32768, 32768, "NMM!")
-TEST_ENCODE_LENGTH(_32769, 32769, "NMM$")
-TEST_ENCODE_LENGTH(_1048575, 1048575, "mmmL")
-TEST_ENCODE_LENGTH(_1048576, 1048576, "NMMM!")
-TEST_ENCODE_LENGTH(_1048577, 1048577, "NMMM$")
+TEST_ENCODE_LENGTH(_10, 10, "1")
+TEST_ENCODE_LENGTH(_31, 31, "H")
+TEST_ENCODE_LENGTH(_32, 32, "J!")
+TEST_ENCODE_LENGTH(_33, 33, "J$")
+TEST_ENCODE_LENGTH(_1023, 1023, "iH")
+TEST_ENCODE_LENGTH(_1024, 1024, "JI!")
+TEST_ENCODE_LENGTH(_1025, 1025, "JI$")
+TEST_ENCODE_LENGTH(_32767, 32767, "iiH")
+TEST_ENCODE_LENGTH(_32768, 32768, "JII!")
+TEST_ENCODE_LENGTH(_32769, 32769, "JII$")
+TEST_ENCODE_LENGTH(_1048575, 1048575, "iiiH")
+TEST_ENCODE_LENGTH(_1048576, 1048576, "JIII!")
+TEST_ENCODE_LENGTH(_1048577, 1048577, "JIII$")
 
 TEST_ENCODE_DECODE_LENGTH(_0_2000, 0, 2000)
 TEST_ENCODE_DECODE_LENGTH(_32000_33000, 32000, 33000)
@@ -413,17 +413,17 @@ TEST_ENCODE_LENGTH_STATUS(_32_length_1, 32, 1, SAFE80_ERROR_NOT_ENOUGH_ROOM)
 TEST_ENCODE_LENGTH_STATUS(_32_length_2, 32, 2, 2)
 
 TEST_DECODE_LENGTH(_0,        "!",      0, 1)
-TEST_DECODE_LENGTH(_31,       "L",     31, 1)
-TEST_DECODE_LENGTH(_32_bad,   "N",     32, SAFE80_ERROR_UNTERMINATED_LENGTH_FIELD)
-TEST_DECODE_LENGTH(_32,       "N!",    32, 2)
-TEST_DECODE_LENGTH(_1024_bad, "NM",  1024, SAFE80_ERROR_UNTERMINATED_LENGTH_FIELD)
-TEST_DECODE_LENGTH(_1024,     "NM!", 1024, 3)
+TEST_DECODE_LENGTH(_31,       "H",     31, 1)
+TEST_DECODE_LENGTH(_32_bad,   "J",     32, SAFE80_ERROR_UNTERMINATED_LENGTH_FIELD)
+TEST_DECODE_LENGTH(_32,       "J!",    32, 2)
+TEST_DECODE_LENGTH(_1024_bad, "JI",  1024, SAFE80_ERROR_UNTERMINATED_LENGTH_FIELD)
+TEST_DECODE_LENGTH(_1024,     "JI!", 1024, 3)
 
 TEST_DECODE_WITH_LENGTH_STATUS(_continues_beyond_end, "$$s1", -1, 1)
-TEST_DECODE_WITH_LENGTH_STATUS(_longer_than_end, "N$)6oG3E;", -1, SAFE80_ERROR_TRUNCATED_DATA)
+TEST_DECODE_WITH_LENGTH_STATUS(_longer_than_end, "N+*5kC2A9", -1, SAFE80_ERROR_TRUNCATED_DATA)
 TEST_DECODE_WITH_LENGTH_STATUS(_no_data,  "$", -1, SAFE80_ERROR_TRUNCATED_DATA)
 TEST_DECODE_WITH_LENGTH_STATUS(_invalid, "/%q", -1, SAFE80_ERROR_INVALID_SOURCE_DATA)
-TEST_DECODE_WITH_LENGTH_STATUS(_whitespace, " N $  1b !\n^f\t\t__]K$k{7B@]8)v1hInzMsV{}`Hbiz-u]I@Asv", -1, 33)
+TEST_DECODE_WITH_LENGTH_STATUS(_whitespace, " J $  0^ !\nYb\t\tZZXG$gw6=:X7*r0dEjvIoRwx[D^ev-qXE:;or", -1, 33)
 
 TEST(Length, invalid)
 {
@@ -465,14 +465,14 @@ TEST(Length, invalid)
 
 // Specification Examples:
 
-TEST_ENCODE_DECODE(example_1, "+3@yggKKdSTm[V)^oj", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
-TEST_ENCODE_DECODE(example_2, "pF1U]^CJPSTQXo-KB[!", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-TEST_ENCODE_DECODE(example_3, "1imlk(,I1HaWeWjS}}F%f", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+TEST_ENCODE_DECODE(example_1, "+2:uccGG`OPiWR*Ykf", {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c})
+TEST_ENCODE_DECODE(example_2, "lB0QXY>FLOPMTk-G=W!", {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
+TEST_ENCODE_DECODE(example_3, "0eihg),E0D]SaSfOxxB(b", {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
 TEST_DECODE_LENGTH(example_1,    "$",      1, 1)
-TEST_DECODE_LENGTH(example_31,   "L",     31, 1)
-TEST_DECODE_LENGTH(example_32,   "N!",    32, 2)
-TEST_DECODE_LENGTH(example_2000, "Nl8", 2000, 3)
-TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "N$1b!^f__]K$k{7B@]8)v1hInzMsV{}`Hbiz-u]I@Asv", {0x21, 0x7b, 0x01, 0x99, 0x3e, 0xd1, 0x7d, 0x3f, 0x21, 0x8b, 0x39, 0x4c, 0x63, 0xc1, 0x88, 0x21, 0xc1, 0x88, 0x99, 0x71, 0xa6, 0x9f, 0xf8, 0x45, 0x96, 0xe1, 0x81, 0x39, 0xad, 0xcc, 0x96, 0x79, 0xd8})
+TEST_DECODE_LENGTH(example_31,   "H",     31, 1)
+TEST_DECODE_LENGTH(example_32,   "J!",    32, 2)
+TEST_DECODE_LENGTH(example_2000, "Jh7", 2000, 3)
+TEST_ENCODE_DECODE_WITH_LENGTH(example_w_length, "J$0^!YbZZXG$gw6=:X7*r0dEjvIoRwx[D^ev-qXE:;or", {0x21, 0x7b, 0x01, 0x99, 0x3e, 0xd1, 0x7d, 0x3f, 0x21, 0x8b, 0x39, 0x4c, 0x63, 0xc1, 0x88, 0x21, 0xc1, 0x88, 0x99, 0x71, 0xa6, 0x9f, 0xf8, 0x45, 0x96, 0xe1, 0x81, 0x39, 0xad, 0xcc, 0x96, 0x79, 0xd8})
 
 
 // README Examples:
@@ -486,9 +486,9 @@ static void my_receive_encoded_data_function(std::string& data)
     (void)data;
 }
 
-TEST(Example, decoding)
+TEST(Readme, decoding)
 {
-    std::string my_source_data = "+3@yggKKdSTm[V)^oj";
+    std::string my_source_data = "+2:uccGG`OPiWR*Ykf";
 
     int64_t decoded_length = safe80_get_decoded_length(my_source_data.size());
     std::vector<uint8_t> decode_buffer(decoded_length);
@@ -506,9 +506,9 @@ TEST(Example, decoding)
     my_receive_decoded_data_function(decoded_data);
 }
 
-TEST(Example, decoding_with_length)
+TEST(Readme, decoding_with_length)
 {
-    std::string my_source_data = "6+3@yggKKdSTm[V)^oj";
+    std::string my_source_data = "5+2:uccGG`OPiWR*Ykf";
 
     int64_t decoded_length = safe80_get_decoded_length(my_source_data.size());
     std::vector<uint8_t> decode_buffer(decoded_length);
@@ -526,7 +526,7 @@ TEST(Example, decoding_with_length)
     my_receive_decoded_data_function(decoded_data);
 }
 
-TEST(Example, encoding)
+TEST(Readme, encoding)
 {
     std::vector<uint8_t> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 
@@ -547,7 +547,7 @@ TEST(Example, encoding)
     my_receive_encoded_data_function(encoded_data);
 }
 
-TEST(Example, encoding_with_length)
+TEST(Readme, encoding_with_length)
 {
     std::vector<uint8_t> my_source_data({0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c});
 

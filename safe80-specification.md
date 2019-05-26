@@ -176,22 +176,22 @@ Once the chunk values have been determined, they are output as characters accord
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char     | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | -------- | ------ | ---- |
-| **00** | `!`  | **10** | `8`  | **20** | `M`  | **30** | `^`      | **40** | `n`  |
-| **01** | `$`  | **11** | `9`  | **21** | `N`  | **31** | `_`      | **41** | `o`  |
-| **02** | `%`  | **12** | `;`  | **22** | `O`  | **32** | `` ` ``  | **42** | `p`  |
-| **03** | `(`  | **13** | `@`  | **23** | `P`  | **33** | `a`      | **43** | `q`  |
-| **04** | `)`  | **14** | `A`  | **24** | `Q`  | **34** | `b`      | **44** | `r`  |
-| **05** | `+`  | **15** | `B`  | **25** | `R`  | **35** | `c`      | **45** | `s`  |
-| **06** | `,`  | **16** | `C`  | **26** | `S`  | **36** | `d`      | **46** | `t`  |
-| **07** | `-`  | **17** | `D`  | **27** | `T`  | **37** | `e`      | **47** | `u`  |
-| **08** | `0`  | **18** | `E`  | **28** | `U`  | **38** | `f`      | **48** | `v`  |
-| **09** | `1`  | **19** | `F`  | **29** | `V`  | **39** | `g`      | **49** | `w`  |
-| **0a** | `2`  | **1a** | `G`  | **2a** | `W`  | **3a** | `h`      | **4a** | `x`  |
-| **0b** | `3`  | **1b** | `H`  | **2b** | `X`  | **3b** | `i`      | **4b** | `y`  |
-| **0c** | `4`  | **1c** | `I`  | **2c** | `Y`  | **3c** | `j`      | **4c** | `z`  |
-| **0d** | `5`  | **1d** | `J`  | **2d** | `Z`  | **3d** | `k`      | **4d** | `{`  |
-| **0e** | `6`  | **1e** | `K`  | **2e** | `[`  | **3e** | `l`      | **4e** | `}`  |
-| **0f** | `7`  | **1f** | `L`  | **2f** | `]`  | **3f** | `m`      | **4f** | `~`  |
+| **00** | `!`  | **10** | `9`  | **20** | `M`  | **30** | `^`      | **40** | `n`  |
+| **01** | `$`  | **11** | `;`  | **21** | `N`  | **31** | `_`      | **41** | `o`  |
+| **02** | `(`  | **12** | `=`  | **22** | `O`  | **32** | `` ` ``  | **42** | `p`  |
+| **03** | `)`  | **13** | `@`  | **23** | `P`  | **33** | `a`      | **43** | `q`  |
+| **04** | `+`  | **14** | `A`  | **24** | `Q`  | **34** | `b`      | **44** | `r`  |
+| **05** | `,`  | **15** | `B`  | **25** | `R`  | **35** | `c`      | **45** | `s`  |
+| **06** | `-`  | **16** | `C`  | **26** | `S`  | **36** | `d`      | **46** | `t`  |
+| **07** | `0`  | **17** | `D`  | **27** | `T`  | **37** | `e`      | **47** | `u`  |
+| **08** | `1`  | **18** | `E`  | **28** | `U`  | **38** | `f`      | **48** | `v`  |
+| **09** | `2`  | **19** | `F`  | **29** | `V`  | **39** | `g`      | **49** | `w`  |
+| **0a** | `3`  | **1a** | `G`  | **2a** | `W`  | **3a** | `h`      | **4a** | `x`  |
+| **0b** | `4`  | **1b** | `H`  | **2b** | `X`  | **3b** | `i`      | **4b** | `y`  |
+| **0c** | `5`  | **1c** | `I`  | **2c** | `Y`  | **3c** | `j`      | **4c** | `z`  |
+| **0d** | `6`  | **1d** | `J`  | **2d** | `Z`  | **3d** | `k`      | **4d** | `{`  |
+| **0e** | `7`  | **1e** | `K`  | **2e** | `[`  | **3e** | `l`      | **4e** | `}`  |
+| **0f** | `8`  | **1f** | `L`  | **2f** | `]`  | **3f** | `m`      | **4f** | `~`  |
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
@@ -210,19 +210,19 @@ If we ignore the special device Windows filename restrictions (`CON`, `PRN`, `LP
 
 | Character | SGML | STRING | URI | FILE | Windows |
 | --------- | ---- | ------ | --- | ---- | ------- |
-|    `"`    |   X  |    X   |     |      |    X    |
+|    `"`    |   X  |    X   |  X  |      |    X    |
 |    `#`    |      |        |  X  |      |         |
+|    `%`    |      |        |  X  |      |         |
 |    `&`    |   X  |        |  X  |      |         |
 |    `'`    |   X  |    X   |  X  |      |         |
 |    `/`    |      |        |  X  |   X  |    X    |
 |    `:`    |      |        |  X  |      |    X    |
-|    `<`    |   X  |        |     |      |    X    |
+|    `<`    |   X  |        |  X  |      |    X    |
 |    `?`    |      |        |  X  |      |    X    |
-|    `=`    |      |        |  X  |      |         |
-|    `\`    |      |    X   |     |      |    X    |
-|    `>`    |      |        |     |      |    X    |
-|    `\|`    |      |        |     |      |    X    |
-|    `*`    |      |        |     |      |    X    |
+|    `\`    |      |    X   |  X  |      |    X    |
+|    `>`    |      |        |  X  |      |    X    |
+|    `\|`   |      |        |  X  |      |    X    |
+|    `*`    |      |        |  X  |      |    X    |
 |    `.`    |      |        |     |      |    X    |
 
 ##### Legend:
@@ -233,21 +233,7 @@ If we ignore the special device Windows filename restrictions (`CON`, `PRN`, `LP
 * **File**:    Reserved in POSIX file systems
 * **Windows**: Reserved in Windows file systems
 
-
-The following characters are also potentially problematic, but are either situational, can be worked around in the encoding scheme, or are less severe of a problem than the others:
-
-| Char | Technology | Issue                                      |
-| ---- | ---------- | ------------------------------------------ |
-| `[`  | URI        | Reserved only in the authority component   |
-| `]`  | URI        | Reserved only in the authority component   |
-| `@`  | URI        | Reserved only in the authority component   |
-| `+`  | URI        | Reserved only in the scheme component      |
-| `!`  | URI        | Reserved (application-specific)            |
-| `$`  | URI        | Reserved (application-specific)            |
-| `(`  | URI        | Reserved (application-specific)            |
-| `)`  | URI        | Reserved (application-specific)            |
-| `,`  | URI        | Parameter delimiter (application-specific) |
-| `;`  | URI        | Parameter delimiter (application-specific) |
+Although the characters `^` `` ` `` `{` `}` `[` `]` are technically not allowed in URIs (`[` and `]` allowed only in the host section), most URI scanners don't reject them.
 
 
 
@@ -300,13 +286,13 @@ Examples
 --------
 
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: +3@yggKKdSTm[V)^oj
+    Encoded: +2:uccGG`OPiWR*Ykf
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-    Encoded: pF1U]^CJPSTQXo-KB[!
+    Encoded: lB0QXY>FLOPMTk-G=W!
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 1imlk(,I1HaWeWjS}}F%f
+    Encoded: 0eihg),E0D]SaSfOxxB(b
 
 
 Filenames
@@ -374,9 +360,9 @@ Examples
 | Length | Encoded Bits           | Length Field |
 | ------ | ---------------------- | ------------ |
 |      1 | `000001`               | `$`          |
-|     31 | `011111`               | `L`          |
-|     32 | `100001 000000`        | `N!`         |
-|   2000 | `100001 111110 010000` | `Nl8`        |
+|     31 | `011111`               | `H`          |
+|     32 | `100001 000000`        | `J!`         |
+|   2000 | `100001 111110 010000` | `Jh7`        |
 
 #### Example: Length field & data:
 
@@ -390,9 +376,9 @@ Data:
 
 Encoded:
 
-    N$1b!^f__]K$k{7B@]8)v1hInzMsV{}`Hbiz-u]I@Asv
+    J$0^!YbZZXG$gw6=:X7*r0dEjvIoRwx[D^ev-qXE:;or
 
-In this case, the length field is `N$` (33)
+In this case, the length field is `J$` (33)
 
 
 Filenames
@@ -405,6 +391,7 @@ Files containing safe80l data should have the extension `s80l`, for example `myd
 Version History
 ---------------
 
+ * May 26, 2019: Version 1
  * March 24, 2019: Preview Version 1
 
 
