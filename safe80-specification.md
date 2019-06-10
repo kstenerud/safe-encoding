@@ -286,13 +286,13 @@ Examples
 --------
 
     Data:    {0x39, 0x12, 0x82, 0xe1, 0x81, 0x39, 0xd9, 0x8b, 0x39, 0x4c, 0x63, 0x9d, 0x04, 0x8c}
-    Encoded: +2:uccGG`OPiWR*Ykf
+    Encoded: ,4@yggKKdSTm[V+^oj
 
     Data:    {0xe6, 0x12, 0xa6, 0x9f, 0xf8, 0x38, 0x6d, 0x7b, 0x01, 0x99, 0x3e, 0x6c, 0x53, 0x7b, 0x60})
-    Encoded: lB0QXY>FLOPMTk-G=W!
+    Encoded: pF2U]^CJPSTQXo0KB[!
 
     Data:    {0x21, 0xd1, 0x7d, 0x3f, 0x21, 0xc1, 0x88, 0x99, 0x71, 0x45, 0x96, 0xad, 0xcc, 0x96, 0x79, 0xd8})
-    Encoded: 0eihg),E0D]SaSfOxxB(b
+    Encoded: 2imlk)-I2HaWeWjS}}F(f
 
 
 Filenames
@@ -360,9 +360,9 @@ Examples
 | Length | Encoded Bits           | Length Field |
 | ------ | ---------------------- | ------------ |
 |      1 | `000001`               | `$`          |
-|     31 | `011111`               | `H`          |
-|     32 | `100001 000000`        | `J!`         |
-|   2000 | `100001 111110 010000` | `Jh7`        |
+|     31 | `011111`               | `L`          |
+|     32 | `100001 000000`        | `N!`         |
+|   2000 | `100001 111110 010000` | `Nl9`        |
 
 #### Example: Length field & data:
 
@@ -376,9 +376,9 @@ Data:
 
 Encoded:
 
-    J$0^!YbZZXG$gw6=:X7*r0dEjvIoRwx[D^ev-qXE:;or
+    N$2b!^f__]K$k{8B@]9+v2hInzMsV{}`Hbiz0u]I@Asv
 
-In this case, the length field is `J$` (33)
+In this case, the length field is `N$` (33)
 
 
 Filenames

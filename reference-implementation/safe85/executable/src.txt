@@ -1,0 +1,1 @@
+Safe85 is a binary data encoding scheme that is safe to be passed through processing systems expecting human readable text.

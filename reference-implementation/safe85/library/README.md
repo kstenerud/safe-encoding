@@ -51,7 +51,7 @@ Note: Using C++ to make the string & data code simpler.
 ### Decoding
 
 ```c++
-    std::string my_source_data = "9F3{+RVCLI9LDzZ!4e";
+    std::string my_source_data = ",4@yggKKdSTm[V+^oj";
 
     int64_t decoded_length = safe85_get_decoded_length(my_source_data.size());
     std::vector<unsigned char> decode_buffer(decoded_length);
@@ -71,7 +71,7 @@ Note: Using C++ to make the string & data code simpler.
 ### Decoding (with length field)
 
 ```c++
-    std::string my_source_data = "59F3{+RVCLI9LDzZ!4e";
+    std::string my_source_data = "7,4@yggKKdSTm[V+^oj";
 
     int64_t decoded_length = safe85_get_decoded_length(my_source_data.size());
     std::vector<unsigned char> decode_buffer(decoded_length);

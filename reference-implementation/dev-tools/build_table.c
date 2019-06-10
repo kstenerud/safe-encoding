@@ -363,8 +363,8 @@ int main(void)
     // FILL_CHUNK_TABLE(16);
     // FILL_CHUNK_TABLE(32);
     // FILL_CHUNK_TABLE(64);
-    // FILL_CHUNK_TABLE(80);
-    FILL_CHUNK_TABLE(85);
+    FILL_CHUNK_TABLE(80);
+    // FILL_CHUNK_TABLE(85);
 
     print_consts();
     print_char_to_chunk_table();
