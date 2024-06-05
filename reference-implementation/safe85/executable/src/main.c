@@ -274,7 +274,6 @@ static void decode(const char* const filename, const bool use_length_field)
     bool is_at_end = false;
     safe85_stream_state stream_state = SAFE85_STREAM_STATE_NONE;
     int64_t expected_bytes_decoded = -1;
-    int64_t total_bytes_decoded = 0;
 
     if(use_length_field)
     {
@@ -320,7 +319,6 @@ static void decode(const char* const filename, const bool use_length_field)
         const int bytes_to_write = dst - decoded_buffer;
 
         write_to_file(dst_file, (const char*)decoded_buffer, bytes_to_write);
-        total_bytes_decoded += bytes_to_write;
 
         encoded_buffer_offset = bytes_to_process - bytes_processed;
         memmove(encoded_buffer, src, encoded_buffer_offset);
@@ -337,7 +335,7 @@ static void decode(const char* const filename, const bool use_length_field)
 
 static char* g_argv_0;
 
-static void print_usage()
+static void print_usage(void)
 {
     print_error("\
 Safe85 v%s: Encodes binary data into a radix-85 text format safe for use in modern text processors.\n\
@@ -358,13 +356,13 @@ File: If not specified, - (read from stdin) is assumed.\n\
 ", EXPAND_AND_QUOTE(PROJECT_VERSION), basename(g_argv_0));
 }
 
-static void print_usage_error_exit()
+static void print_usage_error_exit(void)
 {
     print_usage();
     exit(1);
 }
 
-static void print_version()
+static void print_version(void)
 {
     printf("%s\n", EXPAND_AND_QUOTE(PROJECT_VERSION));
 }

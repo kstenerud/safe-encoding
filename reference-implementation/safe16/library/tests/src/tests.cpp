@@ -421,7 +421,11 @@ TEST_DECODE_WITH_LENGTH_STATUS(_no_data,  "2", -1, SAFE16_ERROR_TRUNCATED_DATA)
 TEST_DECODE_WITH_LENGTH_STATUS(_invalid, "[8d", -1, SAFE16_ERROR_INVALID_SOURCE_DATA)
 TEST_DECODE_WITH_LENGTH_STATUS(_whitespace, " 9 0 0 3 8 8 f 17a0388f17a", -1, 8)
 
-TEST_DECODE(substitution, "ABCDEF01", {0xab, 0xcd, 0xef, 0x01})
+TEST_DECODE(substitution_1, "ABCDEF01", {0xab, 0xcd, 0xef, 0x01})
+TEST_DECODE(substitution_2, "ABCDEFOI", {0xab, 0xcd, 0xef, 0x01})
+TEST_DECODE(substitution_3, "ABCDEFOL", {0xab, 0xcd, 0xef, 0x01})
+TEST_DECODE(substitution_4, "abcdefoi", {0xab, 0xcd, 0xef, 0x01})
+TEST_DECODE(substitution_5, "abcdefol", {0xab, 0xcd, 0xef, 0x01})
 
 TEST(Length, invalid)
 {

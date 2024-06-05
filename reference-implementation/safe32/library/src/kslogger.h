@@ -257,7 +257,7 @@ static void kslog_write_wildcard(const char* fmt, ...)
     va_end(args);
 }
 
-static void kslog_write_newline()
+static void kslog_write_newline(void)
 {
     write(STDERR_FILENO, "\n", 1);
 }

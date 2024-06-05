@@ -14,7 +14,7 @@ It is especially useful for things requiring human input such as activation code
  * Safe for use in legacy text processing systems
  * Support for length fields
  * Human readable values
- * Uppercase and lowercase characters are interchangeable.
+ * Easily confusable characters & digits are interchangeable.
  * Alternate form with prefixed length
 
 ### Advantages over base16:
@@ -62,7 +62,16 @@ Once the chunk values have been determined, they are output as characters accord
 
 The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
 
-Uppercase letters may be substituted for lowercase letters (for example, `A` may be substituted for `a`).
+In order to mitigate human error, decoders must accept a wider range of characters:
+
+ * All letters may be substituted with their capitals.
+ * `0` may be substituted with `o` or its capital.
+ * `1` may be substituted with `l` or `i` or their capitals.
+ * `v` may be substituted with `u` or its capital.
+
+An encoder may choose to generate all lowercase or all uppercase characters, but must not generate mixed case.
+
+Note: Encoders must generate `0` and `1` rather than their substitutes.
 
 
 Whitespace

@@ -108,7 +108,7 @@ typedef enum
  *
  * @return The library version.
  */
-SAFE85_PUBLIC const char* safe85_version();
+SAFE85_PUBLIC const char* safe85_version(void);
 
 /**
  * Estimate the number of bytes that would be occupied when decoding a safe85

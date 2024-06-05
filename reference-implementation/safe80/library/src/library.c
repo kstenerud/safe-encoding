@@ -159,7 +159,7 @@ static inline int calculate_length_chunk_count(int64_t length)
     return chunk_count;
 }
 
-const char* safe80_version()
+const char* safe80_version(void)
 {
     return EXPAND_AND_QUOTE(PROJECT_VERSION);
 }
