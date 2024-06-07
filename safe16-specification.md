@@ -67,7 +67,6 @@ In order to mitigate human error, decoders must accept a wider range of characte
  * All letters may be substituted with their capitals.
  * `0` may be substituted with `o` or its capital.
  * `1` may be substituted with `l` or `i` or their capitals.
- * `v` may be substituted with `u` or its capital.
 
 An encoder may choose to generate all lowercase or all uppercase characters, but must not generate mixed case.
 
