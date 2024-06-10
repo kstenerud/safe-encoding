@@ -263,7 +263,7 @@ Encoding
 
 Safe32L works essentially the same as safe32, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
 
-The length encoding uses the lower 5 bits for data, and the high bit as a continuation bit:
+The length encoding uses the lower 4 bits for data, and the high bit as a continuation bit:
 
 | Bit Position | 4 | 3 | 2 | 1 | 0 |
 | ------------ | - | - | - | - | - |
@@ -272,7 +272,7 @@ The length encoding uses the lower 5 bits for data, and the high bit as a contin
  * c = continuation bit
  * x = data
 
-While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
+While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 4-bit data chunks are interpreted in big endian order (the first character represents the highest 4 bits, then the next lower 4 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
@@ -284,7 +284,7 @@ While the continuation bit is set to 1, the length field is continued in the nex
 | 6          |   24 |                 16777215 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
+Note: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
 
 
 

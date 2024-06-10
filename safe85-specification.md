@@ -288,7 +288,7 @@ The length encoding uses the lower 5 bits for data, and the high bit as a contin
  * c = continuation bit
  * x = data
 
-While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5 bit chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
+While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 5-bit data chunks are interpreted in big endian order (the first character represents the highest 5 bits, then the next lower 5 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
@@ -300,7 +300,7 @@ While the continuation bit is set to 1, the length field is continued in the nex
 | 6          |   30 |               1073741823 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
+Note: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
 
 
 
