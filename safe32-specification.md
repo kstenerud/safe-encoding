@@ -16,6 +16,7 @@ Safe32 is a binary data encoding scheme that is safe to be passed through proces
 
 ### Advantages over base32:
 
+ * All of the abovementioned features
  * Smaller alphabet
  * No padding characters
  * No escaping necessary
@@ -23,6 +24,55 @@ Safe32 is a binary data encoding scheme that is safe to be passed through proces
  * Safe for use in filenames
  * Reliable truncation detection
  * Sortable in generic text sorting algorithms (such as file listings)
+
+
+
+Terms and Conventions
+---------------------
+
+**The following bolded, capitalized terms have specific meanings in this document**:
+
+| Term             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
+| **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
+| **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+
+
+
+Contents
+--------
+
+- [Safe32 Encoding](#safe32-encoding)
+    - [Features:](#features)
+    - [Advantages over base32:](#advantages-over-base32)
+  - [Terms and Conventions](#terms-and-conventions)
+  - [Contents](#contents)
+  - [Encoding](#encoding)
+    - [Encoding Process](#encoding-process)
+      - [5 Byte Full Group](#5-byte-full-group)
+      - [4 Byte Partial Group](#4-byte-partial-group)
+      - [3 Byte Partial Group](#3-byte-partial-group)
+      - [2 Byte Partial Group](#2-byte-partial-group)
+      - [1 Byte Partial Group](#1-byte-partial-group)
+    - [Final Group](#final-group)
+    - [Alphabet](#alphabet)
+  - [Whitespace](#whitespace)
+  - [Examples](#examples)
+  - [Filenames](#filenames)
+- [Safe32L Encoding](#safe32l-encoding)
+  - [Encoding](#encoding-1)
+  - [Whitespace](#whitespace-1)
+  - [Truncation Detection](#truncation-detection)
+  - [Examples](#examples-1)
+      - [Example: Length field \& data:](#example-length-field--data)
+  - [Filenames](#filenames-1)
+  - [Advantages over base32 padding](#advantages-over-base32-padding)
+  - [Version History](#version-history)
+  - [License](#license)
+
 
 
 Encoding
@@ -107,9 +157,26 @@ Next, the accumulator is broken down big-endian style into radix-32 chunks:
     chunk[0] = (accumulator >> 5) & 0x1f
     chunk[1] = accumulator & 0x1f
 
-#### Alphabet
 
-Once the chunk values have been determined, they are output as characters according to the following alphabet:
+### Final Group
+
+In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded, and whether truncation has been detected. Note that truncation detection is not guaranteed - for that you would need to use [Safe32L encoding](#safe32l-encoding).
+
+| Characters | Bytes | Status         |
+| ---------- | ----- | -------------- |
+| 1          | -     | Truncated data |
+| 2          | 1     | OK             |
+| 3          | -     | Truncated data |
+| 4          | 2     | OK             |
+| 5          | 3     | OK             |
+| 6          | -     | Truncated data |
+| 7          | 4     | OK             |
+| 8          | 5     | OK             |
+
+
+### Alphabet
+
+Chunk values are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- |
@@ -122,25 +189,28 @@ Once the chunk values have been determined, they are output as characters accord
 | **06** | `6`  | **0e** | `e`  | **16** | `p`  | **1e** | `y`  |
 | **07** | `7`  | **0f** | `f`  | **17** | `q`  | **1f** | `z`  |
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same natural ordering as the data it represents.
 
-The characters of the alphabet are chosen to minimize confusion when entered by humans:
+Decoders **MUST** accept a wider range of characters in order to mitigate human error:
 
- * No symbols are included
- * All letters may be substituted with their capitals.
- * `0` may be substituted with `o` or its capital.
- * `1` may be substituted with `l` or `i` or their capitals.
- * `v` may be substituted with `u` or its capital.
+ * All letters **CAN** be substituted with their capitals.
+ * `0` **CAN** be substituted with `o` or its capital.
+ * `1` **CAN** be substituted with `l` or `i` or their capitals.
+ * `v` **CAN** be substituted with `u` or its capital.
 
-An encoder may choose to generate all lowercase or all uppercase characters, but must not generate mixed case.
+Encoders are more restricted in what they're allowed to produce:
 
-Note: Encoders must generate `0`, `1`, and `v`/`V` rather than their substitutes.
+ * All letters **MAY** be substituted with their capitals.
+ * Letter case **MUST NOT** be mixed within the generated output - only _all_ uppercase or _all_ lowercase.
+ * All other substitution characters **MUST NOT** be generated.
+ * Encoders **MAY** produce whitespace characters.
+
 
 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream **CAN** contain whitespace at any point. A decoder **MUST** accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -152,26 +222,10 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 0020       | Space           |
 | 002D       | Dash `-`        |
 
-Note: Dash is included as "whitespace" to allow human-input sequences such as:
+**Note**: Dash is included as "whitespace" to allow human-input sequences such as:
 
     85a9-6sd2-88ds-qfbd
 
-
-Termination
------------
-
-In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded:
-
-| Characters | Remaining Bytes |
-| ---------- | --------------- |
-| 1          | invalid         |
-| 2          | 1               |
-| 3          | invalid         |
-| 4          | 2               |
-| 5          | 3               |
-| 6          | invalid         |
-| 7          | 4               |
-| 8          | 5               |
 
 
 Examples
@@ -187,19 +241,21 @@ Examples
     Encoded: 478qtfs1r649jwa5jtpws5ks6r
 
 
+
 Filenames
 ---------
 
-Files containing safe32 data should have the extension `s32`, for example `mydata.s32`.
+Files containing safe32 data **SHOULD** have the extension `s32`, for example `mydata.s32`.
 
 ------------------------------------------------------------------------------
 
 
 
-Safe32L
-=======
+Safe32L Encoding
+================
 
-While safe32 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe32 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is sometimes desirable to prefix a length field so that the receiving end will be sure of a complete transfer.
+
 
 
 Encoding
@@ -231,19 +287,22 @@ While the continuation bit is set to 1, the length field is continued in the nex
 Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
 
 
+
 Whitespace
 ----------
 
-The length field may contain whitespace at any point in the stream, following the same rules as for safe32.
+The length field **CAN** also be broken up using the same whitespace rules as for safe32.
+
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence (length or data), one of two things will happen:
+If truncation occurs anywhere in the encoded sequence (length or data), one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
+
 
 
 Examples
@@ -270,10 +329,12 @@ Encoded:
 In this case, the length field is `h0` (16)
 
 
+
 Filenames
 ---------
 
-Files containing safe32l data should have the extension `s32l`, for example `mydata.s32l`.
+Files containing safe32l data **SHOULD** have the extension `s32l`, for example `mydata.s32l`.
+
 
 
 Advantages over base32 padding

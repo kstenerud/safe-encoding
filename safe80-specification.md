@@ -23,6 +23,55 @@ It is specially designed to be safe for use in Windows filenames.
 
 
 
+Terms and Conventions
+---------------------
+
+**The following bolded, capitalized terms have specific meanings in this document**:
+
+| Term             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
+| **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
+| **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+
+
+
+Contents
+--------
+
+- [Safe80 Encoding](#safe80-encoding)
+    - [Features:](#features)
+  - [Terms and Conventions](#terms-and-conventions)
+  - [Contents](#contents)
+  - [Encoding](#encoding)
+  - [Encoding Process](#encoding-process)
+    - [Groups](#groups)
+      - [15 Byte Full Group](#15-byte-full-group)
+    - [Partial Groups](#partial-groups)
+      - [10 Byte Partial Group](#10-byte-partial-group)
+      - [3 Byte Partial Group](#3-byte-partial-group)
+      - [2 Byte Partial Group](#2-byte-partial-group)
+      - [1 Byte Partial Group](#1-byte-partial-group)
+    - [Final Group](#final-group)
+    - [Alphabet](#alphabet)
+      - [Choice of Alphabet](#choice-of-alphabet)
+  - [Whitespace](#whitespace)
+  - [Examples](#examples)
+  - [Filenames](#filenames)
+- [Safe80L Encoding](#safe80l-encoding)
+  - [Encoding](#encoding-1)
+  - [Whitespace](#whitespace-1)
+  - [Truncation Detection](#truncation-detection)
+  - [Examples](#examples-1)
+      - [Example: Length field \& data:](#example-length-field--data)
+  - [Filenames](#filenames-1)
+  - [Version History](#version-history)
+  - [License](#license)
+
+
+
 Encoding
 --------
 
@@ -36,10 +85,12 @@ The following semi-accurate approximation shows the general idea:
               [hiiiiii] [iijjjj] [jjjjkk] [kkkkkkl] [llllll] [lmmmmm] [mmmnnn] [nnnnno] [ooooooo]
 
 
+
 Encoding Process
 ----------------
 
 The encoding process encodes groups of 15 bytes, outputting 19 chunks per group. If the source data length is not a multiple of 15, then the final group is output as a partial group, using only as many chunks as is necessary to encode the remaining bytes, with the unused high portion of the highest chunk cleared.
+
 
 ### Groups
 
@@ -88,6 +139,7 @@ Next, the accumulator is broken down big-endian style into radix-80 chunks:
     chunk[18] = accumulator % 80
 
 Since the accumulator's allowed range is from 0 - 0xffffffffffffffffffffffffffffff, any combinations of chunks that exceed this range are not allowed.
+
 
 ### Partial Groups
 
@@ -169,10 +221,35 @@ Algorithm:
     chunk[0] = (accumulator / 80^1) % 80
     chunk[1] = accumulator % 80
 
+### Final Group
+
+In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded, and whether truncation has been detected. Note that truncation detection is not guaranteed - for that you would need to use [Safe80L encoding](#safe80l-encoding).
+
+| Characters | Bytes | Status         |
+| ---------- | ----- | -------------- |
+| 1          | -     | Truncated data |
+| 2          | 1     | OK             |
+| 3          | 2     | OK             |
+| 4          | 3     | OK             |
+| 5          | -     | Truncated data |
+| 6          | 4     | OK             |
+| 7          | 5     | OK             |
+| 8          | 6     | OK             |
+| 9          | 7     | OK             |
+| 10         | -     | Truncated data |
+| 11         | 8     | OK             |
+| 12         | 9     | OK             |
+| 13         | 10    | OK             |
+| 14         | 11    | OK             |
+| 15         | -     | Truncated data |
+| 16         | 12    | OK             |
+| 17         | 13    | OK             |
+| 18         | 14    | OK             |
+| 19         | 15    | OK             |
 
 ### Alphabet
 
-Once the chunk values have been determined, they are output as characters according to the following alphabet:
+Chunk values are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char     | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | -------- | ------ | ---- |
@@ -193,18 +270,17 @@ Once the chunk values have been determined, they are output as characters accord
 | **0e** | `7`  | **1e** | `K`  | **2e** | `[`  | **3e** | `l`      | **4e** | `}`  |
 | **0f** | `8`  | **1f** | `L`  | **2f** | `]`  | **3f** | `m`      | **4f** | `~`  |
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
-
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same natural ordering as the data it represents.
 
 #### Choice of Alphabet
 
-In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only use 80 characters, 14 of these can be dropped.
+In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only use 80 characters, 14 of these could be dropped.
 
 Filename restrictions in Windows are described here: https://docs.microsoft.com/en-us/windows/desktop/FileIO/naming-a-file
 
 In short, the following characters are reserved in Windows: `< > : " / \ | ? *`
 
-As well, a Windows filename may not end with a `.`
+As well, a Windows filename **CANNOT** not end with a `.`
 
 If we ignore the special device Windows filename restrictions (`CON`, `PRN`, `LPT1`, etc), we end up with the following matrix of 14 disallowed characters for all systems we wish to support:
 
@@ -225,7 +301,7 @@ If we ignore the special device Windows filename restrictions (`CON`, `PRN`, `LP
 |    `*`    |      |        |  X  |      |    X    |
 |    `.`    |      |        |     |      |    X    |
 
-##### Legend:
+**Legend**:
 
 * **SGML**:    Reserved in SGML (such as HTML, XML) documents
 * **STRING**:  Reserved in string literals
@@ -240,7 +316,7 @@ Although the characters `^` `` ` `` `{` `}` `[` `]` are technically not allowed 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream **CAN** contain whitespace at any point. A decoder **MUST** accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -250,35 +326,6 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 000a       | Line Feed       |
 | 000d       | Carriage Return |
 | 0020       | Space           |
-
-
-
-Termination
------------
-
-In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded:
-
-| Characters | Remaining Bytes |
-| ---------- | --------------- |
-| 1          | invalid         |
-| 2          | 1               |
-| 3          | 2               |
-| 4          | 3               |
-| 5          | invalid         |
-| 6          | 4               |
-| 7          | 5               |
-| 8          | 6               |
-| 9          | 7               |
-| 10         | invalid         |
-| 11         | 8               |
-| 12         | 9               |
-| 13         | 10              |
-| 14         | 11              |
-| 15         | invalid         |
-| 16         | 12              |
-| 17         | 13              |
-| 18         | 14              |
-| 19         | 15              |
 
 
 
@@ -295,19 +342,21 @@ Examples
     Encoded: 2imlk)-I2HaWeWjS}}F(f
 
 
+
 Filenames
 ---------
 
-Files containing safe80 data should have the extension `s80`, for example `mydata.s80`.
+Files containing safe80 data **SHOULD** have the extension `s80`, for example `mydata.s80`.
 
 ------------------------------------------------------------------------------
 
 
 
-Safe80L
-=======
+Safe80L Encoding
+================
 
-While safe80 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe80 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end will be sure of a complete transfer.
+
 
 
 Encoding
@@ -339,19 +388,22 @@ While the continuation bit is set to 1, the length field is continued in the nex
 Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
 
 
+
 Whitespace
 ----------
 
-The length field may contain whitespace at any point in the stream, following the same rules as for safe80.
+The length field **CAN** contain whitespace at any point in the stream, following the same rules as for safe80.
+
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence (length or data), one of two things will happen:
+If truncation occurs anywhere in the encoded sequence (length or data), one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
+
 
 
 Examples
@@ -381,10 +433,11 @@ Encoded:
 In this case, the length field is `N$` (33)
 
 
+
 Filenames
 ---------
 
-Files containing safe80l data should have the extension `s80l`, for example `mydata.s80l`.
+Files containing safe80l data **SHOULD** have the extension `s80l`, for example `mydata.s80l`.
 
 
 

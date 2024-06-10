@@ -13,6 +13,7 @@ Safe64 is a binary data encoding scheme that is safe to be passed through proces
 
 ### Advantages over base64:
 
+ * All of the abovementioned features
  * Smaller alphabet
  * No padding characters
  * No escaping necessary
@@ -20,6 +21,53 @@ Safe64 is a binary data encoding scheme that is safe to be passed through proces
  * Safe for use in filenames
  * Reliable truncation detection
  * Sortable in generic text sorting algorithms (such as file listings)
+
+
+
+Terms and Conventions
+---------------------
+
+**The following bolded, capitalized terms have specific meanings in this document**:
+
+| Term             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
+| **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
+| **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+
+
+
+Contents
+--------
+
+- [Safe64 Encoding](#safe64-encoding)
+    - [Features:](#features)
+    - [Advantages over base64:](#advantages-over-base64)
+  - [Terms and Conventions](#terms-and-conventions)
+  - [Contents](#contents)
+  - [Encoding](#encoding)
+    - [Encoding Process](#encoding-process)
+      - [3 Byte Full Group](#3-byte-full-group)
+      - [2 Byte Partial Group](#2-byte-partial-group)
+      - [1 Byte Partial Group](#1-byte-partial-group)
+    - [Final Group](#final-group)
+    - [Alphabet](#alphabet)
+  - [Whitespace](#whitespace)
+  - [Examples](#examples)
+  - [Filenames](#filenames)
+- [Safe64L Encoding](#safe64l-encoding)
+  - [Encoding](#encoding-1)
+  - [Whitespace](#whitespace-1)
+  - [Truncation Detection](#truncation-detection)
+  - [Examples](#examples-1)
+      - [Example: Length field \& data:](#example-length-field--data)
+  - [Filenames](#filenames-1)
+  - [Advantages over base64 padding](#advantages-over-base64-padding)
+  - [Version History](#version-history)
+  - [License](#license)
+
 
 
 Encoding
@@ -73,9 +121,22 @@ Next, the accumulator is broken down big-endian style into radix-64 chunks:
     chunk[0] = (accumulator >> 6) & 0x3f
     chunk[1] = accumulator & 0x3f
 
-#### Alphabet
 
-Once the chunk values have been determined, they are output as characters according to the following alphabet:
+### Final Group
+
+In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded, and whether truncation has been detected. Note that truncation detection is not guaranteed - for that you would need to use [Safe64L encoding](#safe64l-encoding).
+
+| Characters | Bytes | Status         |
+| ---------- | ----- | -------------- |
+| 1          | -     | Truncated data |
+| 2          | 1     | OK             |
+| 3          | 2     | OK             |
+| 4          | 3     | OK             |
+
+
+### Alphabet
+
+Chunk values are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- |
@@ -96,13 +157,14 @@ Once the chunk values have been determined, they are output as characters accord
 | **0e** | `D`  | **1e** | `T`  | **2e** | `i`  | **3e** | `y`  |
 | **0f** | `E`  | **1f** | `U`  | **2f** | `j`  | **3f** | `z`  |
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same natural ordering as the data it represents.
+
 
 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream **CAN** contain whitespace at any point. A decoder **MUST** accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -113,18 +175,6 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 000d       | Carriage Return |
 | 0020       | Space           |
 
-
-Termination
------------
-
-In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded:
-
-| Characters | Remaining Bytes |
-| ---------- | --------------- |
-| 1          | invalid         |
-| 2          | 1               |
-| 3          | 2               |
-| 4          | 3               |
 
 
 Examples
@@ -140,19 +190,21 @@ Examples
     Encoded: 7S4xEm60X8_lGOPhn8Ot2N
 
 
+
 Filenames
 ---------
 
-Files containing safe64 data should have the extension `s64`, for example `mydata.s64`.
+Files containing safe64 data **SHOULD** have the extension `s64`, for example `mydata.s64`.
 
 ------------------------------------------------------------------------------
 
 
 
-Safe64L
-=======
+Safe64L Encoding
+================
 
-While safe64 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe64 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is sometimes desirable to prefix a length field so that the receiving end will be sure of a complete transfer.
+
 
 
 Encoding
@@ -184,19 +236,22 @@ While the continuation bit is set to 1, the length field is continued in the nex
 Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
 
 
+
 Whitespace
 ----------
 
-The length field may contain whitespace at any point in the stream, following the same rules as for safe64.
+The length field **CAN** contain whitespace at any point in the stream, following the same rules as for safe64.
+
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence (length or data), one of two things will happen:
+If truncation occurs anywhere in the encoded sequence (length or data), one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
+
 
 
 Examples
@@ -226,10 +281,12 @@ Encoded:
 In this case, the length field is `W0` (33)
 
 
+
 Filenames
 ---------
 
-Files containing safe64l data should have the extension `s64l`, for example `mydata.s64l`.
+Files containing safe64l data **SHOULD** have the extension `s64l`, for example `mydata.s64l`.
+
 
 
 Advantages over base64 padding

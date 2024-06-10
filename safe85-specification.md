@@ -14,6 +14,7 @@ Safe85 is a binary data encoding scheme that is safe to be passed through proces
 
 ### Advantages over base85:
 
+ * All of the abovementioned features
  * Smaller alphabet
  * No padding
  * No escaping necessary
@@ -21,6 +22,55 @@ Safe85 is a binary data encoding scheme that is safe to be passed through proces
  * Reliable truncation detection
  * Safe for filenames on Linux, UNIX, POSIX, Mac filesystems
  * Sortable in generic text sorting algorithms
+
+
+
+Terms and Conventions
+---------------------
+
+**The following bolded, capitalized terms have specific meanings in this document**:
+
+| Term             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
+| **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
+| **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+
+
+
+Contents
+--------
+
+- [Safe85 Encoding](#safe85-encoding)
+    - [Features:](#features)
+    - [Advantages over base85:](#advantages-over-base85)
+  - [Terms and Conventions](#terms-and-conventions)
+  - [Contents](#contents)
+  - [Encoding](#encoding)
+  - [Encoding Process](#encoding-process)
+    - [Groups](#groups)
+      - [4 Byte Full Group](#4-byte-full-group)
+      - [3 Byte Partial Group](#3-byte-partial-group)
+      - [2 Byte Partial Group](#2-byte-partial-group)
+      - [1 Byte Partial Group](#1-byte-partial-group)
+    - [Final Group](#final-group)
+    - [Alphabet](#alphabet)
+      - [Choice of Alphabet](#choice-of-alphabet)
+  - [Whitespace](#whitespace)
+  - [Examples](#examples)
+  - [Filenames](#filenames)
+- [Safe85L Encoding](#safe85l-encoding)
+  - [Encoding](#encoding-1)
+  - [Whitespace](#whitespace-1)
+  - [Truncation Detection](#truncation-detection)
+  - [Examples](#examples-1)
+      - [Example: Length field \& data:](#example-length-field--data)
+  - [Filenames](#filenames-1)
+  - [Advantages over base85 padding](#advantages-over-base85-padding)
+  - [Version History](#version-history)
+  - [License](#license)
 
 
 
@@ -35,10 +85,12 @@ The following semi-accurate approximation shows the general idea:
     Encoded:  [aaaaaa] [abbbbb] [bbbccc] [cccccd] [dddddd]
 
 
+
 Encoding Process
 ----------------
 
 The encoding process encodes groups of 4 bytes, outputting 5 chunks per group. If the source data length is not a multiple of 4, then the final group is output as a partial group, using only as many chunks as is necessary to encode the remaining bytes, with the unused high portion of the highest chunk cleared.
+
 
 ### Groups
 
@@ -58,7 +110,7 @@ Next, the accumulator is broken down big-endian style into radix-85 chunks:
     chunk[3] = (accumulator / 85) % 85
     chunk[4] = accumulator % 85
 
-Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk cannot be larger than 82.
+Since the accumulator's allowed range is from 0 - 0xffffffff, any combinations of chunks that exceed 0xffffffff (any chunk sequence > `82 23 54 12 0`) are not allowed. This also implies that the first chunk **CANNOT** be larger than 82.
 
 | Chunk 0 | Chunk 1 | Chunk 2 | Chunk 3 | Chunk 4 |
 | ------- | ------- | ------- | ------- | ------- |
@@ -106,6 +158,20 @@ Algorithm:
     chunk[0] = (accumulator / 85) % 85
     chunk[1] = accumulator % 85
 
+
+### Final Group
+
+In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded, and whether truncation has been detected. Note that truncation detection is not guaranteed - for that you would need to use [Safe85L encoding](#safe85l-encoding).
+
+| Characters | Bytes | Status         |
+| ---------- | ----- | -------------- |
+| 1          | -     | Truncated data |
+| 2          | 1     | OK             |
+| 3          | 2     | OK             |
+| 4          | 3     | OK             |
+| 5          | 4     | OK             |
+
+
 ### Alphabet
 
 Once the chunk values have been determined, they are output as characters according to the following alphabet:
@@ -129,12 +195,11 @@ Once the chunk values have been determined, they are output as characters accord
 | **0e** | `5`  | **1e** | `G`  | **2e** | `W`  | **3e** | `h`      | **4e** | `x`  |        |      |
 | **0f** | `6`  | **1f** | `H`  | **2f** | `X`  | **3f** | `i`      | **4f** | `y`  |        |      |
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
-
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same natural ordering as the data it represents.
 
 #### Choice of Alphabet
 
-In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only use 85 characters, 9 of these can be dropped. In safe85, the nine most problematic characters in modern text processing systems are dropped:
+In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whitespace characters. Since we only use 85 characters, 9 of these could be dropped. In safe85, the nine most problematic characters in modern text processing systems are dropped:
 
 | Character | SGML | STRING | URI | FILE |
 | --------- | ---- | ------ | --- | ---- |
@@ -148,15 +213,14 @@ In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whi
 |    `?`    |      |        |  X  |      |
 |    `\`    |      |    X   |  X  |      |
 
-
-##### Legend:
+**Legend**:
 
 * **SGML**:   Reserved in SGML (such as HTML, XML) documents
 * **STRING**: Reserved in string literals
 * **URI**:    Reserved or problematic in URIs
 * **File**:   Reserved in POSIX file systems
 
-##### Notes:
+**Notes**:
 
 * The three most problematic URI characters are `%` (used for percent-escaping), `?` (delimits the query portion), and `#` (delimits the fragment portion).
 * Although the characters `>` `^` `` ` `` `{` `|` `}` `[` `]` are technically not allowed in URIs (`[` and `]` allowed only in the host section), most URI scanners don't reject them.
@@ -167,7 +231,7 @@ In the lower 7-bit UTF-8/ASCII range, there are a total of 94 printable, non-whi
 Whitespace
 ----------
 
-An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream **CAN** contain whitespace at any point. A decoder **MUST** accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -177,21 +241,6 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 000a       | Line Feed       |
 | 000d       | Carriage Return |
 | 0020       | Space           |
-
-
-
-Termination
------------
-
-In the last (possibly partial) group, the number of remaining characters indicates how many bytes of data remain to be decoded:
-
-| Characters | Remaining Bytes |
-| ---------- | --------------- |
-| 1          | invalid         |
-| 2          | 1               |
-| 3          | 2               |
-| 4          | 3               |
-| 5          | 4               |
 
 
 
@@ -208,19 +257,21 @@ Examples
     Encoded: 1stg+1r5~+MKP7zkj0X2
 
 
+
 Filenames
 ---------
 
-Files containing safe85 data should have the extension `s85`, for example `mydata.s85`.
+Files containing safe85 data **SHOULD** have the extension `s85`, for example `mydata.s85`.
 
 ------------------------------------------------------------------------------
 
 
 
-Safe85L
-=======
+Safe85L Encoding
+================
 
-While safe85 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe85 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end will be sure of a complete transfer.
+
 
 
 Encoding
@@ -252,19 +303,22 @@ While the continuation bit is set to 1, the length field is continued in the nex
 Note: The length field encodes the length of the **non-encoded source data**, not the encoded result or the length field itself.
 
 
+
 Whitespace
 ----------
 
-The length field may contain whitespace at any point in the stream, following the same rules as for safe85.
+The length field **CAN** contain whitespace at any point in the stream, following the same rules as for safe85.
+
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence (length or data), one of two things will happen:
+If truncation occurs anywhere in the encoded sequence (length or data), one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
+
 
 
 Examples
@@ -294,10 +348,11 @@ Encoded:
 In this case, the length field is `J$` (33)
 
 
+
 Filenames
 ---------
 
-Files containing safe85l data should have the extension `s85l`, for example `mydata.s85l`.
+Files containing safe85l data **SHOULD** have the extension `s85l`, for example `mydata.s85l`.
 
 
 Advantages over base85 padding

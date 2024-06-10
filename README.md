@@ -17,15 +17,15 @@ Features:
 
 ### All
 
- * Safe for use in JSON, SGML formats, source code strings, without escaping
+ * Safe for use in JSON, SGML formats, source code strings - without escaping
  * Safe for use in path, query, and fragment components of URIs
  * Safe for use in formatted documents
  * Safe for use in legacy text processing systems
- * Support for length fields
+ * Support for length fields (to detect truncation at any point)
  * Liberal whitespace rules
  * No padding characters
  * Safe for use in filenames on POSIX file systems
- * Sortable in generic text sorting algorithms (such as file listings)
+ * Naturally sortable with generic text sorting algorithms (such as file listings)
 
 ### Safe80 and below
 

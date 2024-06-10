@@ -19,8 +19,52 @@ It is especially useful for things requiring human input such as activation code
 
 ### Advantages over base16:
 
+ * All of the abovementioned features
  * Liberal whitespace rules
  * Truncation detection
+
+
+
+Terms and Conventions
+---------------------
+
+**The following bolded, capitalized terms have specific meanings in this document**:
+
+| Term             | Meaning                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **MUST (NOT)**   | If this directive is not adhered to, the document or implementation is invalid.                                       |
+| **SHOULD (NOT)** | Every effort should be made to follow this directive, but the document/implementation is still valid if not followed. |
+| **MAY (NOT)**    | It is up to the implementation to decide whether to do something or not.                                              |
+| **CAN**          | Refers to a possibility which **MUST** be accommodated by the implementation.                                         |
+| **CANNOT**       | Refers to a situation which **MUST NOT** be allowed by the implementation.                                            |
+
+
+
+Contents
+--------
+
+- [Safe16 Encoding](#safe16-encoding)
+    - [Features:](#features)
+    - [Advantages over base16:](#advantages-over-base16)
+  - [Terms and Conventions](#terms-and-conventions)
+  - [Contents](#contents)
+  - [Encoding](#encoding)
+    - [Encoding Process](#encoding-process)
+    - [Final Group](#final-group)
+    - [Alphabet](#alphabet)
+  - [Whitespace](#whitespace)
+  - [Examples](#examples)
+  - [Filenames](#filenames)
+- [Safe16L Encoding](#safe16l-encoding)
+  - [Encoding](#encoding-1)
+  - [Whitespace](#whitespace-1)
+  - [Truncation Detection](#truncation-detection)
+  - [Examples](#examples-1)
+  - [Filenames](#filenames-1)
+  - [Advantages over base16](#advantages-over-base16-1)
+  - [Version History](#version-history)
+  - [License](#license)
+
 
 
 Encoding
@@ -36,7 +80,7 @@ Layout:
 
 ### Encoding Process
 
-Each byte is split into two radix-16 chunks:
+Each byte is split into a group of two radix-16 chunks:
 
     chunk[0] = (accumulator >> 4) & 0x0f
     chunk[1] = accumulator & 0x0f
@@ -45,9 +89,19 @@ Each byte is split into two radix-16 chunks:
 | ------- | ------- |
 | 0 - 15  | 0 - 15  |
 
-#### Alphabet
 
-Once the chunk values have been determined, they are output as characters according to the following alphabet:
+### Final Group
+
+In the last (possibly partial) group of the input stream, the number of remaining characters indicates how many bytes of data remain to be decoded, and whether truncation has been detected. Note that truncation detection is not guaranteed - for that you would need to use [Safe16L encoding](#safe16l-encoding).
+
+| Characters | Bytes | Status         |
+| ---------- | ----- | -------------- |
+| 1          | -     | Truncated data |
+| 2          | 1     | OK             |
+
+### Alphabet
+
+Chunk values are output as characters according to the following alphabet:
 
 | Value  | Char | Value  | Char |
 | ------ | ---- | ------ | ---- |
@@ -60,23 +114,27 @@ Once the chunk values have been determined, they are output as characters accord
 | **06** | `6`  | **0e** | `e`  |
 | **07** | `7`  | **0f** | `f`  |
 
-The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same order as the data it represents.
+The alphabet is ordered according to the characters' ordinal positions in UTF-8, so that the resulting encoded text will sort in the same natural ordering as the data it represents.
 
-In order to mitigate human error, decoders must accept a wider range of characters:
+Decoders **MUST** accept a wider range of characters in order to mitigate human error:
 
- * All letters may be substituted with their capitals.
- * `0` may be substituted with `o` or its capital.
- * `1` may be substituted with `l` or `i` or their capitals.
+ * All letters **CAN** be substituted with their capitals.
+ * `0` **CAN** be substituted with `o` or its capital.
+ * `1` **CAN** be substituted with `l` or `i` or their capitals.
 
-An encoder may choose to generate all lowercase or all uppercase characters, but must not generate mixed case.
+Encoders are more restricted in what they're allowed to produce:
 
-Note: Encoders must generate `0` and `1` rather than their substitutes.
+ * All letters **MAY** be substituted with their capitals.
+ * Letter case **MUST NOT** be mixed within the generated output - only _all_ uppercase or _all_ lowercase.
+ * All other substitution characters **MUST NOT** be generated.
+ * Encoders **MAY** produce whitespace characters.
+
 
 
 Whitespace
 ----------
 
-An encoded stream may contain whitespace at any point. A decoder must accept and discard all whitespace characters while processing the stream.
+An encoded stream **CAN** contain whitespace at any point. A decoder **MUST** accept and discard all whitespace characters while processing the stream.
 
 For the purposes of this spec, only the following characters qualify as whitespace:
 
@@ -88,9 +146,10 @@ For the purposes of this spec, only the following characters qualify as whitespa
 | 0020       | Space           |
 | 002D       | Dash `-`        |
 
-Note: Dash is included as "whitespace" to allow human input sequences such as:
+**Note**: Dash is included as "whitespace" to allow human input sequences such as:
 
     85a9-6ed2-88dd-09bc
+
 
 
 Examples
@@ -106,19 +165,21 @@ Examples
     Encoded: 21d17d3f21c18899714596adcc9679d8
 
 
+
 Filenames
 ---------
 
-Files containing safe16 data should have the extension `s16`, for example `mydata.s16`.
+Files containing safe16 data **SHOULD** have the extension `s16`, for example `mydata.s16`.
 
 ------------------------------------------------------------------------------
 
 
 
-Safe16L
-=======
+Safe16L Encoding
+================
 
-While safe16 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is desirable to prefix a length field so that the receiving end can be sure of a complete transfer.
+While safe16 is sufficient for most systems, there are transmission mediums where no clear end marker exists for the encoded data field, or where no guarantee exists for detecting truncated data. In such cases, it is sometimes desirable to prefix a length field so that the receiving end will be sure of a complete transfer.
+
 
 
 Encoding
@@ -150,19 +211,22 @@ When the continuation bit is set to 1, the length field is continued in the next
 Note: The length field encodes the length of the **non-encoded source data**, not the encoded data or the length field itself.
 
 
+
 Whitespace
 ----------
 
-The length field may also be broken up using the same whitespace rules as for safe16.
+The length field **CAN** also be broken up using the same whitespace rules as for safe16.
+
 
 
 Truncation Detection
 --------------------
 
-Should truncation occur anywhere in the encoded sequence, one of two things will happen:
+If truncation occurs anywhere in the encoded sequence, one of two things will happen:
 
  1. The decoded data length won't match the length field.
  2. The length field won't have a character with the continuation bit cleared.
+
 
 
 Examples
@@ -189,10 +253,12 @@ Encoded:
 Where `a0` is the length field (16)
 
 
+
 Filenames
 ---------
 
-Files containing safe16l data should have the extension `s16l`, for example `mydata.s16l`.
+Files containing safe16l data **SHOULD** have the extension `s16l`, for example `mydata.s16l`.
+
 
 
 Advantages over base16
@@ -205,6 +271,8 @@ Advantages over base16
 Version History
 ---------------
 
+ * June 9, 2024: Version 2
+   - Added missing support for substitution characters.
  * January 29, 2019: Version 1
  * January 14, 2019: Preview Version 1
 
