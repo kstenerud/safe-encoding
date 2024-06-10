@@ -261,9 +261,9 @@ While safe32 is sufficient for most systems, there are transmission mediums wher
 Encoding
 --------
 
-Safe32L works essentially the same as safe32, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
+Safe32L works essentially the same as safe32, except that it is prefixed by a length field. The length field is built incrementally with 5-bit chunks encoded using the same encoding alphabet as is used for regular safe32 data, until sufficient bits are available to encode the length of the data.
 
-The length encoding uses the lower 4 bits for data, and the high bit as a continuation bit:
+In each chunk, the lower 4 bits contain data, and the high bit is a continuation bit:
 
 | Bit Position | 4 | 3 | 2 | 1 | 0 |
 | ------------ | - | - | - | - | - |
@@ -284,7 +284,7 @@ While the continuation bit is set to 1, the length field is continued in the nex
 | 6          |   24 |                 16777215 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
+**Note**: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
 
 
 
@@ -310,10 +310,10 @@ Examples
 
 | Length | Encoded Bits        | Length Field |
 | ------ | ------------------- | ------------ |
-|      1 | `00001`             | `2`          |
-|     15 | `01111`             | `g`          |
-|     16 | `10001 00000`       | `j0`         |
-|   2000 | `10111 11101 00000` | `rx0`        |
+|      1 | `00001`             | `1`          |
+|     15 | `01111`             | `f`          |
+|     16 | `10001 00000`       | `h0`         |
+|   2000 | `10111 11101 00000` | `qx0`        |
 
 #### Example: Length field & data:
 

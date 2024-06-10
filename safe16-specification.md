@@ -185,9 +185,9 @@ While safe16 is sufficient for most systems, there are transmission mediums wher
 Encoding
 --------
 
-Safe16L works essentially the same as safe16, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
+Safe16L works essentially the same as safe16, except that it is prefixed by a length field. The length field is built incrementally with 4-bit chunks encoded using the same encoding alphabet as is used for regular safe16 data, until sufficient bits are available to encode the length of the data.
 
-The length encoding uses the lower 3 bits for data, and the high bit as a continuation bit:
+In each chunk, the lower 3 bits contain data, and the high bit is a continuation bit:
 
 | Bit Position | 3 | 2 | 1 | 0 |
 | ------------ | - | - | - | - |
@@ -196,7 +196,7 @@ The length encoding uses the lower 3 bits for data, and the high bit as a contin
  * c = continuation bit
  * x = data
 
-When the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 3-bit data chunks are interpreted in big endian order (the first character represents the highest 3 bits, then the next lower 3 bits, and so on).
+While the continuation bit is set to 1, the length field is continued in the next character. Building of the length field continues until a continuation bit of 0 is encountered. The 3-bit data chunks are interpreted in big endian order (the first character represents the highest 3 bits, then the next lower 3 bits, and so on).
 
 | Characters | Bits | Maximum encodable length |
 | ---------- | ---- | ------------------------ |
@@ -208,7 +208,7 @@ When the continuation bit is set to 1, the length field is continued in the next
 | 6          |   18 |                   262143 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
+**Note**: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
 
 
 

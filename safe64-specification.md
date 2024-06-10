@@ -210,9 +210,9 @@ While safe64 is sufficient for most systems, there are transmission mediums wher
 Encoding
 --------
 
-Safe64L works essentially the same as safe64, except that it is prefixed by a length field. The length field is built incrementally using the same encoding alphabet as the data, until sufficient bits are available to encode the length of the data.
+Safe64L works essentially the same as safe64, except that it is prefixed by a length field. The length field is built incrementally with 6-bit chunks encoded using the same encoding alphabet as is used for regular safe64 data, until sufficient bits are available to encode the length of the data.
 
-The length encoding uses the lower 5 bits for data, and the high bit as a continuation bit:
+In each chunk, the lower 5 bits contain data, and the high bit is a continuation bit:
 
 | Bit Position | 5 | 4 | 3 | 2 | 1 | 0 |
 | ------------ | - | - | - | - | - | - |
@@ -233,7 +233,7 @@ While the continuation bit is set to 1, the length field is continued in the nex
 | 6          |   30 |               1073741823 |
 | ...        |  ... |                      ... |
 
-Note: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
+**Note**: The length field encodes the length of the **non-encoded source data** - not the encoded result, and not including the length field itself.
 
 
 
