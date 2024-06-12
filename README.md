@@ -148,6 +148,13 @@ The reference implementations contain libraries and command line executables:
 
 
 
+Example App
+-----------
+
+[safeenc](reference-implementation/safeenc) is a command line program that can convert to/from any safe format.
+
+
+
 License
 -------
 
