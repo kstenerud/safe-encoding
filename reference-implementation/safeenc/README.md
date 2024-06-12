@@ -1,7 +1,13 @@
 Safe Encoder
 ============
 
-An example command-line tool to encode/decode safe encoding formats (safe16, safe32, safe64, safe80, safe85)
+An example command-line tool to encode/decode safe-encoding formats:
+
+ * [safe16](../../safe16-specification.md)
+ * [safe32](../../safe32-specification.md)
+ * [safe64](../../safe64-specification.md)
+ * [safe80](../../safe80-specification.md)
+ * [safe85](../../safe85-specification.md)
 
 
 Requirements
@@ -57,7 +63,7 @@ Usage
 Examples
 --------
 
-Convert a text UUID to safe32:
+Convert a text UUID to [safe32](../../safe32-specification.md):
 
 ```
 echo a9bef56f-c989-4b98-a03d-9709e8612122 | ./safeenc -i '-' -x -r 32 && echo
@@ -71,7 +77,7 @@ echo a9bef56f-c989-b98-03d-9709e8612122 | ./safeenc -i '-' -x -r 32 -s 6 -S '-' 
 n6zfav-y9h6wr-0fcq17-m62892
 ```
 
-Whoops... A user misread some confusable characters in your activation code (v, 0, and 1)! No problem, safe32 handles that:
+Whoops... A user misread some confusable characters in your activation code (v, 0, and 1)! No problem, [safe32](../../safe32-specification.md) handles that:
 
 ```
 echo n6zfau-y9h6wr-Ofcql7-m62892 | ./safeenc -i '-' -d -r 32 | od -t x1
